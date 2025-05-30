@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calculator, Plus, Trash2, Download, Globe, Ruler, FileText, X, DollarSign, CalendarDays, Link, TrendingUp, Wrench } from 'lucide-react'; // Added Wrench icon for equipment
+import { Analytics } from "@vercel/analytics/react"
 
 // Reusable MultiSelectDropdown component for better selection experience
 const MultiSelectDropdown = ({ options, selectedValues, onChange, placeholder }) => {
