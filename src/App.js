@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { inject } from '@vercel/analytics';
+inject();
 import { Calculator, Plus, Trash2, Download, Globe, Ruler, FileText, X, DollarSign, CalendarDays, Link, TrendingUp, Wrench } from 'lucide-react'; // Added Wrench icon for equipment
 
 // Reusable MultiSelectDropdown component for better selection experience
