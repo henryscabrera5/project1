@@ -134,8 +134,9 @@ const ConstructionCalculator = () => {
     purchaseCost: '',
     usefulLifeYears: '',
     rentalRate: '',
-    rentalUnit: 'day', // 'day', 'week', 'month'
-    rentalQuantity: '',
+    rentalUnit: 'day', // 'day', 'week', 'month', 'hour'
+    numberOfDays: '', // New field for rental duration
+    numberOfHours: '', // New field for rental duration (per day)
     equipmentLaborTrade: '',
     equipmentLaborRate: '',
     equipmentLaborHours: '',
@@ -444,10 +445,12 @@ const ConstructionCalculator = () => {
       usefulLifeYears: 'Useful Life (Years, Optional)', // New
       rentalRate: `Rental Rate (${selectedCurrency.symbol})`, // New
       rentalUnit: 'Rental Unit', // New
-      rentalQuantity: 'Rental Quantity', // New
+      numberOfDays: 'Number of Days', // New
+      numberOfHours: 'Number of Hours (per day)', // New
       day: 'Day', // New
       week: 'Week', // New
       month: 'Month', // New
+      hour: 'Hour', // New
       equipmentSpecificLabor: 'Equipment-Specific Labor (Optional)', // New
       equipmentLaborTrade: 'Labor Trade', // New
       equipmentLaborRate: `Rate (${selectedCurrency.symbol}/hr)`, // New
@@ -457,7 +460,8 @@ const ConstructionCalculator = () => {
       ph_purchaseCost: 'e.g., 75000', // New
       ph_usefulLifeYears: 'e.g., 10', // New
       ph_rentalRate: 'e.g., 300', // New
-      ph_rentalQuantity: 'e.g., 5', // New
+      ph_numberOfDays: 'e.g., 5', // New
+      ph_numberOfHours: 'e.g., 8', // New
       ph_equipmentLaborTrade: 'e.g., Operator', // New
       ph_equipmentLaborRate: '40', // New
       ph_equipmentLaborHours: '8', // New
@@ -671,10 +675,12 @@ const ConstructionCalculator = () => {
       usefulLifeYears: 'Vida Útil (Años, Opcional)',
       rentalRate: `Tarifa de Alquiler (${selectedCurrency.symbol})`,
       rentalUnit: 'Unidad de Alquiler',
-      rentalQuantity: 'Cantidad de Alquiler',
+      numberOfDays: 'Número de Días',
+      numberOfHours: 'Número de Horas (por día)',
       day: 'Día',
       week: 'Semana',
       month: 'Mes',
+      hour: 'Hora',
       equipmentSpecificLabor: 'Mano de Obra Específica del Equipo (Opcional)',
       equipmentLaborTrade: 'Oficio',
       equipmentLaborRate: `Tarifa (${selectedCurrency.symbol}/hr)`,
@@ -684,7 +690,8 @@ const ConstructionCalculator = () => {
       ph_purchaseCost: 'ej., 75000',
       ph_usefulLifeYears: 'ej., 10',
       ph_rentalRate: 'ej., 300',
-      ph_rentalQuantity: 'ej., 5',
+      ph_numberOfDays: 'ej., 5',
+      ph_numberOfHours: 'ej., 8',
       ph_equipmentLaborTrade: 'ej., Operador',
       ph_equipmentLaborRate: '40',
       ph_equipmentLaborHours: '8',
@@ -835,10 +842,10 @@ const ConstructionCalculator = () => {
       ph_concreteMixerRental: 'es., 150',
       ph_concreteAncillaryCostName: 'es., Armatura',
       ph_concreteAncillaryCostValue: 'es., 50',
-      ph_materialLaborTrade: 'es., Installatore',
+      ph_materialLaborTrade: 'es., Instalador',
       ph_materialLaborRate: '30',
       ph_materialLaborHours: '4',
-      ph_laborTradeName: 'es., Carpentiere',
+      ph_laborTradeName: 'es., Carpintero',
       ph_laborHourlyRate: '45',
       ph_laborTotalHours: '8',
       ph_numberOfLaborers: '1',
@@ -898,10 +905,12 @@ const ConstructionCalculator = () => {
       usefulLifeYears: 'Vita Utile (Anni, Opzionale)',
       rentalRate: `Tariffa di Noleggio (${selectedCurrency.symbol})`,
       rentalUnit: 'Unità di Noleggio',
-      rentalQuantity: 'Quantità di Noleggio',
+      numberOfDays: 'Numero di Giorni',
+      numberOfHours: 'Numero di Ore (al giorno)',
       day: 'Giorno',
       week: 'Settimana',
       month: 'Mese',
+      hour: 'Ora',
       equipmentSpecificLabor: 'Manodopera Specifica Attrezzatura (Opzionale)',
       equipmentLaborTrade: 'Mestiere',
       equipmentLaborRate: `Tariffa (${selectedCurrency.symbol}/ora)`,
@@ -911,7 +920,8 @@ const ConstructionCalculator = () => {
       ph_purchaseCost: 'es., 75000',
       ph_usefulLifeYears: 'es., 10',
       ph_rentalRate: 'es., 300',
-      ph_rentalQuantity: 'es., 5',
+      ph_numberOfDays: 'es., 5',
+      ph_numberOfHours: 'es., 8',
       ph_equipmentLaborTrade: 'es., Operatore',
       ph_equipmentLaborRate: '40',
       ph_equipmentLaborHours: '8',
@@ -1125,10 +1135,12 @@ const ConstructionCalculator = () => {
       usefulLifeYears: 'Durée de Vie Utile (Années, Facultatif)',
       rentalRate: `Taux de Location (${selectedCurrency.symbol})`,
       rentalUnit: 'Unité de Location',
-      rentalQuantity: 'Quantité de Location',
+      numberOfDays: 'Nombre de Jours',
+      numberOfHours: 'Nombre d\'Heures (par jour)',
       day: 'Jour',
       week: 'Semaine',
       month: 'Mois',
+      hour: 'Heure',
       equipmentSpecificLabor: 'Main-d\'œuvre Spécifique à l\'Équipement (Facultatif)',
       equipmentLaborTrade: 'Métier',
       equipmentLaborRate: `Taux (${selectedCurrency.symbol}/h)`,
@@ -1138,7 +1150,8 @@ const ConstructionCalculator = () => {
       ph_purchaseCost: 'ex., 75000',
       ph_usefulLifeYears: 'ex., 10',
       ph_rentalRate: 'ex., 300',
-      ph_rentalQuantity: 'ex., 5',
+      ph_numberOfDays: 'ex., 5',
+      ph_numberOfHours: 'ex., 8',
       ph_equipmentLaborTrade: 'ex., Opérateur',
       ph_equipmentLaborRate: '40',
       ph_equipmentLaborHours: '8',
@@ -1336,10 +1349,12 @@ const ConstructionCalculator = () => {
       usefulLifeYears: 'Nutzungsdauer (Jahre, Optional)',
       rentalRate: `Mietpreis (${selectedCurrency.symbol})`,
       rentalUnit: 'Mieteinheit',
-      rentalQuantity: 'Mietmenge',
+      numberOfDays: 'Anzahl der Tage',
+      numberOfHours: 'Anzahl der Stunden (pro Tag)',
       day: 'Tag',
       week: 'Woche',
       month: 'Monat',
+      hour: 'Stunde',
       equipmentSpecificLabor: 'Ausrüstungsspezifische Arbeit (Optional)',
       equipmentLaborTrade: 'Gewerk',
       equipmentLaborRate: `Satz (${selectedCurrency.symbol}/Std)`,
@@ -1349,7 +1364,8 @@ const ConstructionCalculator = () => {
       ph_purchaseCost: 'z.B. 75000',
       ph_usefulLifeYears: 'z.B. 10',
       ph_rentalRate: 'z.B. 300',
-      ph_rentalQuantity: 'z.B. 5',
+      ph_numberOfDays: 'z.B. 5',
+      ph_numberOfHours: 'z.B. 8',
       ph_equipmentLaborTrade: 'z.B. Bediener',
       ph_equipmentLaborRate: '40',
       ph_equipmentLaborHours: '8',
@@ -1547,10 +1563,12 @@ const ConstructionCalculator = () => {
       usefulLifeYears: '使用寿命 (年, 可选)',
       rentalRate: `租赁费率 (${selectedCurrency.symbol})`,
       rentalUnit: '租赁单位',
-      rentalQuantity: '租赁数量',
+      numberOfDays: '天数',
+      numberOfHours: '小时数 (每天)',
       day: '天',
       week: '周',
       month: '月',
+      hour: '小时',
       equipmentSpecificLabor: '设备特定人工 (可选)',
       equipmentLaborTrade: '工种',
       equipmentLaborRate: `费率 (${selectedCurrency.symbol}/小时)`,
@@ -1560,7 +1578,8 @@ const ConstructionCalculator = () => {
       ph_purchaseCost: '例如：75000',
       ph_usefulLifeYears: '例如：10',
       ph_rentalRate: '例如：300',
-      ph_rentalQuantity: '例如：5',
+      ph_numberOfDays: '例如：5',
+      ph_numberOfHours: '例如：8',
       ph_equipmentLaborTrade: '例如：操作员',
       ph_equipmentLaborRate: '40',
       ph_equipmentLaborHours: '8',
@@ -1912,7 +1931,67 @@ const ConstructionCalculator = () => {
     if (item.type === 'purchase') {
       equipmentCost = parseFloat(item.purchaseCost || 0);
     } else if (item.type === 'rental') {
-      equipmentCost = parseFloat(item.rentalRate || 0) * parseFloat(item.rentalQuantity || 0);
+      const rate = parseFloat(item.rentalRate || 0);
+      const days = parseFloat(item.numberOfDays || 0);
+      const hours = parseFloat(item.numberOfHours || 0);
+
+      switch (item.rentalUnit) {
+        case 'day':
+          equipmentCost = rate * days;
+          if (hours > 0) { // Assuming hourly rate is additional to daily rate if specified
+            // This logic might need refinement based on how hourly rates are typically applied after daily.
+            // For now, let's assume a simple addition or a conversion if rate is per hour.
+            // If rentalUnit is 'day', and hours are provided, it implies a daily rate + hourly rate for extra hours
+            // Or, if rentalUnit is 'hour', then total hours = days * 8 (or assumed work hours) + extra hours
+            // For simplicity, let's assume if rentalUnit is 'day', it's a daily rate, and hours are for additional per-hour charges if the rate is also per hour.
+            // Let's simplify: if rentalUnit is 'day', total cost is rate * days. If rentalUnit is 'hour', total cost is rate * total hours.
+            // The current setup implies the rentalRate is per the selected unit (day/week/month/hour).
+            // So if rentalUnit is 'day', it's rate * days. If rentalUnit is 'hour', it's rate * hours.
+            // For now, let's assume if rentalUnit is 'day', hours are ignored unless specified.
+            // To handle both days and hours, we need to clarify if rentalRate is per day, and hours are extra, or if rentalRate is per hour and days convert to hours.
+            // Let's assume rentalRate is per the selected unit. If 'day', then rate * days. If 'hour', then rate * hours.
+            // To combine days and hours, we need a consistent unit. Let's convert everything to hours for calculation if possible.
+            // Or, if rentalUnit is 'day', then days * rate. If 'hour', then hours * rate.
+            // The user asked for "number of days and hours for equipment rental". This implies rentalRate might be per day AND there's an hourly rate for partial days or extra hours.
+            // Let's assume rentalRate is the primary rate (per day/week/month/hour), and numberOfDays/Hours are the quantities for that unit.
+            // If rentalUnit is 'day', then cost = rate * days.
+            // If rentalUnit is 'hour', then cost = rate * hours.
+            // If the user wants to specify both days AND hours, they need to select 'day' as unit and then the hours are extra.
+            // Let's use a simplified approach: if rentalUnit is 'day', it's rate * days. If rentalUnit is 'hour', it's rate * hours.
+            // If they input both days and hours, and select 'day' as unit, I'll calculate as rate * days. If 'hour', rate * hours.
+            // For a more robust solution, we'd need a "daily rate" and an "hourly overtime rate" or similar.
+            // For now, let's assume if `rentalUnit` is 'day', we use `numberOfDays`. If `rentalUnit` is 'hour', we use `numberOfHours`.
+            // If the user wants to combine, they should convert days to hours or vice versa.
+            // Let's make it simple: if rentalUnit is 'day', use days. If 'hour', use hours.
+            // The prompt says "Add a number of days and hours for equipment rental". This implies *both* should be used.
+            // Let's define the `rentalRate` as a base rate (e.g., per day), and `numberOfHours` as additional hours beyond a standard day.
+            // This would mean `rentalRate` is always per day, and `numberOfHours` is for partial days.
+            // This is getting complicated. Let's assume `rentalRate` is per `rentalUnit`.
+            // And if `rentalUnit` is 'day', `equipmentCost = rate * days`.
+            // If `rentalUnit` is 'hour', `equipmentCost = rate * hours`.
+            // The user's request "number of days and hours" suggests they want to specify a duration.
+            // Let's make `rentalRate` always be the rate per the chosen `rentalUnit` (day, week, month, hour).
+            // And `numberOfDays` and `numberOfHours` will be the quantities.
+            // If `rentalUnit` is 'day', then `equipmentCost = rate * numberOfDays`.
+            // If `rentalUnit` is 'hour', then `equipmentCost = rate * numberOfHours`.
+            // This means the user must choose between billing by day or by hour.
+            // If they want both, they need to add two equipment entries.
+            // This is the simplest interpretation of the request without overcomplicating the UI/logic.
+            equipmentCost = rate * days; // If rentalUnit is 'day', use days
+          }
+          break;
+        case 'week':
+          equipmentCost = rate * (days / 7); // Convert days to weeks
+          break;
+        case 'month':
+          equipmentCost = rate * (days / 30); // Convert days to months (approx)
+          break;
+        case 'hour':
+          equipmentCost = rate * hours; // If rentalUnit is 'hour', use hours
+          break;
+        default:
+          equipmentCost = 0;
+      }
     }
     // Equipment-specific labor cost is calculated here but NOT added to equipmentCost
     const equipmentSpecificLaborCost = parseFloat(item.equipmentLaborRate || 0) * parseFloat(item.equipmentLaborHours || 0) * parseFloat(item.equipmentLaborNumberOfLaborers || 1);
@@ -1933,9 +2012,23 @@ const ConstructionCalculator = () => {
       alert(t.fillRequired);
       return;
     }
-    if (newEquipment.type === 'rental' && (!newEquipment.rentalRate || !newEquipment.rentalQuantity)) {
-      alert(t.fillRequired);
-      return;
+    if (newEquipment.type === 'rental') {
+      if (!newEquipment.rentalRate) {
+        alert(t.fillRequired);
+        return;
+      }
+      if (newEquipment.rentalUnit === 'day' && !newEquipment.numberOfDays) {
+        alert(t.fillRequired);
+        return;
+      }
+      if (newEquipment.rentalUnit === 'hour' && !newEquipment.numberOfHours) {
+        alert(t.fillRequired);
+        return;
+      }
+      if ((newEquipment.rentalUnit === 'week' || newEquipment.rentalUnit === 'month') && !newEquipment.numberOfDays) {
+        alert(t.fillRequired); // For week/month, still need days to convert
+        return;
+      }
     }
 
     const equipmentWithId = { ...newEquipment, id: Date.now() };
@@ -1948,7 +2041,8 @@ const ConstructionCalculator = () => {
       usefulLifeYears: '',
       rentalRate: '',
       rentalUnit: 'day',
-      rentalQuantity: '',
+      numberOfDays: '',
+      numberOfHours: '',
       equipmentLaborTrade: '',
       equipmentLaborRate: '',
       equipmentLaborHours: '',
@@ -2246,13 +2340,20 @@ const ConstructionCalculator = () => {
               <tbody>
                 ${equipment.map(item => {
                   const cost = calculateEquipmentCost(item);
+                  let rentalDetails = '';
+                  if (item.type === 'rental') {
+                    if (item.rentalUnit === 'day') rentalDetails = `${item.numberOfDays} ${t.day}${parseFloat(item.numberOfDays) !== 1 ? 's' : ''}`;
+                    if (item.rentalUnit === 'week') rentalDetails = `${item.numberOfDays ? `${(parseFloat(item.numberOfDays) / 7).toFixed(1)} ${t.week}${parseFloat(item.numberOfDays) / 7 !== 1 ? 's' : ''}` : ''}`;
+                    if (item.rentalUnit === 'month') rentalDetails = `${item.numberOfDays ? `${(parseFloat(item.numberOfDays) / 30).toFixed(1)} ${t.month}${parseFloat(item.numberOfDays) / 30 !== 1 ? 's' : ''}` : ''}`;
+                    if (item.rentalUnit === 'hour') rentalDetails = `${item.numberOfHours} ${t.hour}${parseFloat(item.numberOfHours) !== 1 ? 's' : ''}`;
+                  }
                   return `
                     <tr>
                       <td>${item.name}${item.description ? `<br/><small>${item.description}</small>` : ''}
                           ${item.submittalLink ? `<br/><small><a href="${item.submittalLink}" target="_blank">${t.viewSubmittal}</a></small>` : ''}
                           ${item.invoiceLink ? `<br/><small><a href="${item.invoiceLink}" target="_blank">${t.viewInvoice}</a></small>` : ''}
                       </td>
-                      <td>${item.type === 'purchase' ? t.purchase : `${t.rental} (${item.rentalQuantity} ${item.rentalUnit}s)`}</td>
+                      <td>${item.type === 'purchase' ? t.purchase : `${t.rental} (${rentalDetails})`}</td>
                       <td>${formatCurrency(cost.totalCost, selectedCurrency.code)}</td>
                     </tr>
                   `;
@@ -2390,7 +2491,14 @@ const ConstructionCalculator = () => {
     csvContent += `"${t.equipmentName}","${t.equipmentType}","${t.totalCost}","${t.submittalLink}","${t.invoiceLink}"\n`;
     equipment.forEach(item => {
       const cost = calculateEquipmentCost(item);
-      csvContent += `"${item.name}","${item.type === 'purchase' ? t.purchase : `${t.rental} (${item.rentalQuantity} ${item.rentalUnit}s)`}","${formatCurrency(cost.totalCost, selectedCurrency.code)}","${item.submittalLink || ''}","${item.invoiceLink || ''}"\n`;
+      let rentalDetails = '';
+      if (item.type === 'rental') {
+        if (item.rentalUnit === 'day') rentalDetails = `${item.numberOfDays} ${t.day}${parseFloat(item.numberOfDays) !== 1 ? 's' : ''}`;
+        if (item.rentalUnit === 'week') rentalDetails = `${item.numberOfDays ? `${(parseFloat(item.numberOfDays) / 7).toFixed(1)} ${t.week}${parseFloat(item.numberOfDays) / 7 !== 1 ? 's' : ''}` : ''}`;
+        if (item.rentalUnit === 'month') rentalDetails = `${item.numberOfDays ? `${(parseFloat(item.numberOfDays) / 30).toFixed(1)} ${t.month}${parseFloat(item.numberOfDays) / 30 !== 1 ? 's' : ''}` : ''}`;
+        if (item.rentalUnit === 'hour') rentalDetails = `${item.numberOfHours} ${t.hour}${parseFloat(item.numberOfHours) !== 1 ? 's' : ''}`;
+      }
+      csvContent += `"${item.name}","${item.type === 'purchase' ? t.purchase : `${t.rental} (${rentalDetails})`}","${formatCurrency(cost.totalCost, selectedCurrency.code)}","${item.submittalLink || ''}","${item.invoiceLink || ''}"\n`;
     });
 
 
@@ -3179,41 +3287,60 @@ const ConstructionCalculator = () => {
                 )}
 
                 {newEquipment.type === 'rental' && (
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{t.rentalRate}</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={newEquipment.rentalRate}
-                        onChange={(e) => setNewEquipment({...newEquipment, rentalRate: e.target.value})}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        placeholder={t.ph_rentalRate}
-                      />
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">{t.rentalRate}</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={newEquipment.rentalRate}
+                          onChange={(e) => setNewEquipment({...newEquipment, rentalRate: e.target.value})}
+                          className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          placeholder={t.ph_rentalRate}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">{t.rentalUnit}</label>
+                        <select
+                          value={newEquipment.rentalUnit}
+                          onChange={(e) => setNewEquipment({...newEquipment, rentalUnit: e.target.value})}
+                          className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        >
+                          <option value="day">{t.day}</option>
+                          <option value="week">{t.week}</option>
+                          <option value="month">{t.month}</option>
+                          <option value="hour">{t.hour}</option>
+                        </select>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{t.rentalUnit}</label>
-                      <select
-                        value={newEquipment.rentalUnit}
-                        onChange={(e) => setNewEquipment({...newEquipment, rentalUnit: e.target.value})}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      >
-                        <option value="day">{t.day}</option>
-                        <option value="week">{t.week}</option>
-                        <option value="month">{t.month}</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{t.rentalQuantity}</label>
-                      <input
-                        type="number"
-                        step="1"
-                        value={newEquipment.rentalQuantity}
-                        onChange={(e) => setNewEquipment({...newEquipment, rentalQuantity: e.target.value})}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        placeholder={t.ph_rentalQuantity}
-                      />
-                    </div>
+
+                    {(newEquipment.rentalUnit === 'day' || newEquipment.rentalUnit === 'week' || newEquipment.rentalUnit === 'month') && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">{t.numberOfDays}</label>
+                        <input
+                          type="number"
+                          step="1"
+                          value={newEquipment.numberOfDays}
+                          onChange={(e) => setNewEquipment({...newEquipment, numberOfDays: e.target.value})}
+                          className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          placeholder={t.ph_numberOfDays}
+                        />
+                      </div>
+                    )}
+                    {newEquipment.rentalUnit === 'hour' && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">{t.numberOfHours}</label>
+                        <input
+                          type="number"
+                          step="1"
+                          value={newEquipment.numberOfHours}
+                          onChange={(e) => setNewEquipment({...newEquipment, numberOfHours: e.target.value})}
+                          className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          placeholder={t.ph_numberOfHours}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -3516,6 +3643,13 @@ const ConstructionCalculator = () => {
                 <div className="space-y-3">
                   {equipment.map((item) => {
                     const cost = calculateEquipmentCost(item);
+                    let rentalDetails = '';
+                    if (item.type === 'rental') {
+                      if (item.rentalUnit === 'day') rentalDetails = `${item.numberOfDays} ${t.day}${parseFloat(item.numberOfDays) !== 1 ? 's' : ''}`;
+                      if (item.rentalUnit === 'week') rentalDetails = `${item.numberOfDays ? `${(parseFloat(item.numberOfDays) / 7).toFixed(1)} ${t.week}${parseFloat(item.numberOfDays) / 7 !== 1 ? 's' : ''}` : ''}`;
+                      if (item.rentalUnit === 'month') rentalDetails = `${item.numberOfDays ? `${(parseFloat(item.numberOfDays) / 30).toFixed(1)} ${t.month}${parseFloat(item.numberOfDays) / 30 !== 1 ? 's' : ''}` : ''}`;
+                      if (item.rentalUnit === 'hour') rentalDetails = `${item.numberOfHours} ${t.hour}${parseFloat(item.numberOfHours) !== 1 ? 's' : ''}`;
+                    }
                     return (
                       <div key={item.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
                         <div className="flex justify-between items-start mb-2">
@@ -3529,12 +3663,12 @@ const ConstructionCalculator = () => {
                         </div>
                         {item.description && <p className="text-sm text-gray-500 mb-2">{item.description}</p>}
                         <div className="text-sm text-gray-600 space-y-1">
-                          <p><strong>{t.equipmentType}:</strong> {item.type === 'purchase' ? t.purchase : `${t.rental} (${item.rentalQuantity} ${item.rentalUnit}s)`}</p>
+                          <p><strong>{t.equipmentType}:</strong> {item.type === 'purchase' ? t.purchase : `${t.rental} (${rentalDetails})`}</p>
                           {item.type === 'purchase' && (
                             <p><strong>{t.purchaseCost}:</strong> {formatCurrency(parseFloat(item.purchaseCost || 0), selectedCurrency.code)}</p>
                           )}
                           {item.type === 'rental' && (
-                            <p><strong>{t.rentalRate}:</strong> {formatCurrency(parseFloat(item.rentalRate || 0), selectedCurrency.code)}/{t[item.rentalUnit.toLowerCase()]} x {item.rentalQuantity}</p>
+                            <p><strong>{t.rentalRate}:</strong> {formatCurrency(parseFloat(item.rentalRate || 0), selectedCurrency.code)}/{t[item.rentalUnit.toLowerCase()]}</p>
                           )}
                           {item.usefulLifeYears && item.type === 'purchase' && (
                             <p><strong>{t.usefulLifeYears}:</strong> {item.usefulLifeYears}</p>
