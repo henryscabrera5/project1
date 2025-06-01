@@ -94,8 +94,8 @@ const ConstructionCalculator = () => {
     beamWidthM: '',
     beamHeightM: '',
     totalSpanFt: '',
-    totalSpanM: '',
     spacingFt: '',
+    totalSpanM: '',
     spacingM: '',
     materialLaborTrade: '',
     materialLaborRate: '',
@@ -184,7 +184,7 @@ const ConstructionCalculator = () => {
       assignedMaterialIds: task.assignedMaterialIds.filter(id => materialIds.has(id))
     }));
     setScheduleTasks(updatedTasks);
-  }, [materials]);
+  }, [materials, scheduleTasks]); // Added scheduleTasks to dependencies
 
   // Effect to clean up assigned equipment in schedule if equipment is removed
   useEffect(() => {
@@ -194,7 +194,7 @@ const ConstructionCalculator = () => {
       assignedEquipmentIds: task.assignedEquipmentIds.filter(id => equipmentIds.has(id))
     }));
     setScheduleTasks(updatedTasks);
-  }, [equipment]);
+  }, [equipment, scheduleTasks]); // Added scheduleTasks to dependencies
 
   // Effect to clean up assigned tasks in forecast if a task is removed
   useEffect(() => {
@@ -204,7 +204,7 @@ const ConstructionCalculator = () => {
       assignedTaskIds: cost.assignedTaskIds.filter(id => taskIds.has(id))
     }));
     setForecastCosts(updatedForecastCosts);
-  }, [scheduleTasks]);
+  }, [scheduleTasks, forecastCosts]); // Added forecastCosts to dependencies
 
   // Effect to clean up subcontractor assignments if a subcontractor is removed
   useEffect(() => {
@@ -244,8 +244,8 @@ const ConstructionCalculator = () => {
     { code: 'BRL', symbol: 'R$', name: 'Brazilian Real' },
     { code: 'CLP', symbol: '$', name: 'Chilean Peso' },
     { code: 'COP', symbol: '$', name: 'Colombian Peso' },
-    { code: 'CRC', symbol: '', name: 'Costa Rican Colón' },
-    { code: 'CUP', symbol: '', name: 'Cuban Peso' },
+    { code: 'CRC', symbol: '₡', name: 'Costa Rican Colón' },
+    { code: 'CUP', symbol: '₱', name: 'Cuban Peso' },
     { code: 'DOP', symbol: 'RD$', name: 'Dominican Peso' },
     { code: 'ECU', symbol: '$', name: 'Ecuadorian Sucre (historical, USD used)' },
     { code: 'GTQ', symbol: 'Q', name: 'Guatemalan Quetzal' },
@@ -255,7 +255,7 @@ const ConstructionCalculator = () => {
     { code: 'NIO', symbol: 'C$', name: 'Nicaraguan Córdoba' },
     { code: 'PAB', symbol: 'B/.', name: 'Panamanian Balboa' },
     { code: 'PEN', symbol: 'S/.', name: 'Peruvian Sol' },
-    { code: 'PYG', symbol: '', name: 'Paraguayan Guarani' },
+    { code: 'PYG', symbol: '₲', name: 'Paraguayan Guarani' },
     { code: 'SRD', symbol: '$', name: 'Surinamese Dollar' },
     { code: 'TTD', symbol: 'TT$', name: 'Trinidad and Tobago Dollar' },
     { code: 'UYU', symbol: '$U', name: 'Uruguayan Peso' },
@@ -337,7 +337,7 @@ const ConstructionCalculator = () => {
       metric: 'Metric',
       noMaterials: 'No materials added yet. Use the form above to add materials.',
       noLaborTrades: 'No project labor trades added yet. Use the form above to add trades.',
-      noEquipment: 'No equipment added yet. Use the form above to add equipment.',
+      noEquipment: 'No equipment added yet. Use the form of above to add equipment.',
       fillRequired: 'Please fill in all required fields',
       currency: 'Currency',
       baseUnits: 'Base Units:',
@@ -445,6 +445,7 @@ const ConstructionCalculator = () => {
       assignedSubcontractor: 'Assigned Subcontractor', // New
       assignMaterialsPlaceholder: 'Select materials for this task',
       assignEquipmentPlaceholder: 'Select equipment for this task',
+      selectSubcontractorPlaceholder: 'Select a subcontractor', // New
       assignSubcontractorPlaceholder: 'Select a subcontractor for this task', // New
       addScheduleTask: 'Add Task to Schedule',
       noScheduleTasks: 'No tasks added yet. Use the form above to create a schedule.',
@@ -694,6 +695,7 @@ const ConstructionCalculator = () => {
       assignedSubcontractor: 'Subcontratista Asignado', // New
       assignMaterialsPlaceholder: 'Seleccionar materiales para esta tarea',
       assignEquipmentPlaceholder: 'Seleccionar equipo para esta tarea',
+      selectSubcontractorPlaceholder: 'Seleccionar un subcontratista', // New
       assignSubcontractorPlaceholder: 'Seleccionar un subcontratista para esta tarea', // New
       addScheduleTask: 'Agregar Tarea al Programa',
       noScheduleTasks: 'No se han agregado tareas aún. Use el formulario de arriba para crear un programa.',
@@ -943,6 +945,7 @@ const ConstructionCalculator = () => {
       assignedSubcontractor: 'Subcontratista Asignado', // New
       assignMaterialsPlaceholder: 'Seleccionar materiales para esta tarea',
       assignEquipmentPlaceholder: 'Seleccionar equipo para esta tarea',
+      selectSubcontractorPlaceholder: 'Seleccionar un subcontratista', // New
       assignSubcontractorPlaceholder: 'Seleccionar un subcontratista para esta tarea', // New
       addScheduleTask: 'Agregar Tarea al Programa',
       noScheduleTasks: 'No se han agregado tareas aún. Use el formulario de arriba para crear un programa.',
@@ -1192,6 +1195,7 @@ const ConstructionCalculator = () => {
       assignedSubcontractor: 'Sous-traitant Assigné', // New
       assignMaterialsPlaceholder: 'Sélectionner les matériaux pour cette tâche',
       assignEquipmentPlaceholder: 'Sélectionner l\'équipement pour cette tâche',
+      selectSubcontractorPlaceholder: 'Sélectionner un sous-traitant', // New
       assignSubcontractorPlaceholder: 'Sélectionner un sous-traitant pour cette tâche', // New
       addScheduleTask: 'Ajouter la Tâche au Calendrier',
       noScheduleTasks: 'Aucune tâche ajoutée. Utilisez le formulaire ci-dessus pour créer un calendrier.',
@@ -1672,6 +1676,7 @@ const ConstructionCalculator = () => {
       assignedSubcontractor: '分配的分包商', // New
       assignMaterialsPlaceholder: '选择此任务的材料',
       assignEquipmentPlaceholder: '选择此任务的设备',
+      selectSubcontractorPlaceholder: '选择一个分包商', // New
       assignSubcontractorPlaceholder: '选择此任务的分包商', // New
       addScheduleTask: '添加到进度表',
       noScheduleTasks: '尚未添加任务。请使用上方表格创建进度表。',
@@ -1804,7 +1809,7 @@ const ConstructionCalculator = () => {
           newMaterialData.beamWidthM = material.beamWidthFt ? feetToMeters(toFeetDecimal(material.beamWidthFt)).toFixed(2) : '';
           newMaterialData.beamHeightM = material.beamHeightFt ? feetToMeters(toFeetDecimal(material.beamHeightFt)).toFixed(2) : '';
           newMaterialData.totalSpanM = feetToMeters(toFeetDecimal(material.totalSpanFt)).toFixed(2);
-          newMaterialData.spacingM = feetToToMeters(toFeetDecimal(material.spacingFt)).toFixed(2);
+          newMaterialData.spacingM = feetToMeters(toFeetDecimal(material.spacingFt)).toFixed(2); // FIX: Changed feetToToMeters to feetToMeters
 
           newMaterialData.beamLengthFt = '';
           newMaterialData.beamWidthFt = '';
@@ -1843,7 +1848,7 @@ const ConstructionCalculator = () => {
       convertedNewMaterial.beamWidthM = newMaterial.beamWidthFt ? feetToMeters(toFeetDecimal(newMaterial.beamWidthFt)).toFixed(2) : '';
       convertedNewMaterial.beamHeightM = newMaterial.beamHeightFt ? feetToMeters(toFeetDecimal(newMaterial.beamHeightFt)).toFixed(2) : '';
       convertedNewMaterial.totalSpanM = newMaterial.totalSpanFt ? feetToMeters(toFeetDecimal(newMaterial.totalSpanFt)).toFixed(2) : '';
-      convertedNewMaterial.spacingM = newMaterial.spacingFt ? feetToMeters(toFeetDecimal(newMaterial.spacingFt)).toFixed(2) : '';
+      convertedNewMaterial.spacingM = newMaterial.spacingFt ? feetToMeters(toFeetDecimal(newMaterial.spacingFt)).toFixed(2) : ''; // FIX: Changed feetToToMeters to feetToMeters
 
       convertedNewMaterial.beamLengthFt = '';
       convertedNewMaterial.beamWidthFt = '';
@@ -2874,7 +2879,7 @@ const ConstructionCalculator = () => {
       return [...manualForecasts, newAutomatedMaterial, newAutomatedLabor, newAutomatedEquipment];
     });
     console.log("[LOG] Automated costs updated in forecast.");
-  }, [materials, laborTrades, equipment, language, units, selectedCurrency, t]); // Dependencies: materials, laborTrades, equipment, and translation/currency settings
+  }, [materials, laborTrades, equipment, language, units, selectedCurrency, t, getTotalMaterialCost, getTotalProjectLaborCost, getTotalEquipmentCost]); // Dependencies: materials, laborTrades, equipment, and translation/currency settings
 
   // Subcontractor functions
   const addSubcontractor = () => {
