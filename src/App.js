@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calculator, Plus, Trash2, Download, Globe, Ruler, FileText, X, DollarSign, CalendarDays, Link, TrendingUp, Wrench } from 'lucide-react'; // Added Wrench icon for equipment
+import { Calculator, Plus, Trash2, Download, Globe, Ruler, FileText, X, DollarSign, CalendarDays, Link, TrendingUp, Wrench, Users } from 'lucide-react'; // Added Users icon for subcontractors
 import { Analytics } from "@vercel/analytics/react"
 
 // Reusable MultiSelectDropdown component for better selection experience
@@ -26,7 +26,7 @@ const MultiSelectDropdown = ({ options, selectedValues, onChange, placeholder })
         onClick={() => setIsOpen(!isOpen)}
       >
         {selectedNames || placeholder}
-        <span className="ml-2 text-gray-500">▼</span>
+        <span className="ml-2 text-gray-500"></span>
       </button>
       {isOpen && (
         <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto">
@@ -60,8 +60,9 @@ const ConstructionCalculator = () => {
   const [selectedCurrency, setSelectedCurrency] = useState({ code: 'USD', symbol: '$', name: 'US Dollar' });
   const [materials, setMaterials] = useState([]);
   const [laborTrades, setLaborTrades] = useState([]);
-  const [equipment, setEquipment] = useState([]); // New state for equipment
-  const [activeTab, setActiveTab] = useState('calculator'); // 'calculator', 'scheduling', or 'cost-forecast'
+  const [equipment, setEquipment] = useState([]);
+  const [subcontractors, setSubcontractors] = useState([]); // New state for subcontractors
+  const [activeTab, setActiveTab] = useState('calculator'); // 'calculator', 'scheduling', 'cost-forecast', 'subcontractors'
 
   // State for unit converters
   const [ftInValue, setFtInValue] = useState('');
@@ -116,6 +117,7 @@ const ConstructionCalculator = () => {
     concreteAncillaryCostValue: '',
     submittalLink: '',
     invoiceLink: '',
+    subcontractorId: '', // New field for subcontractor assignment
   });
 
   // Form state for adding new project-level labor trades
@@ -124,6 +126,7 @@ const ConstructionCalculator = () => {
     rate: '',
     hours: '',
     numberOfLaborers: 1,
+    subcontractorId: '', // New field for subcontractor assignment
   });
 
   // New state for adding new equipment
@@ -135,14 +138,15 @@ const ConstructionCalculator = () => {
     usefulLifeYears: '',
     rentalRate: '',
     rentalUnit: 'day', // 'day', 'week', 'month', 'hour'
-    numberOfDays: '', // New field for rental duration
-    numberOfHours: '', // New field for rental duration (per day)
+    numberOfDays: '',
+    numberOfHours: '',
     equipmentLaborTrade: '',
     equipmentLaborRate: '',
     equipmentLaborHours: '',
     equipmentLaborNumberOfLaborers: 1,
     submittalLink: '',
     invoiceLink: '',
+    subcontractorId: '', // New field for subcontractor assignment
   });
 
   // State for scheduling tab
@@ -152,7 +156,8 @@ const ConstructionCalculator = () => {
     startDate: '',
     endDate: '',
     assignedMaterialIds: [],
-    assignedEquipmentIds: [], // New: assign equipment to tasks
+    assignedEquipmentIds: [],
+    subcontractorId: '', // New field for subcontractor assignment
   });
 
   // State for cost forecast tab
@@ -162,6 +167,13 @@ const ConstructionCalculator = () => {
     costCategory: 'Material', // Default category
     amount: '',
     assignedTaskIds: [], // Array of schedule task IDs
+  });
+
+  // New state for adding new subcontractors
+  const [newSubcontractor, setNewSubcontractor] = useState({
+    name: '',
+    company: '',
+    contactInfo: '',
   });
 
   // Effect to clean up assigned materials in schedule if a material is removed
@@ -194,6 +206,32 @@ const ConstructionCalculator = () => {
     setForecastCosts(updatedForecastCosts);
   }, [scheduleTasks]);
 
+  // Effect to clean up subcontractor assignments if a subcontractor is removed
+  useEffect(() => {
+    const subcontractorIds = new Set(subcontractors.map(sc => sc.id));
+
+    setMaterials(prevMaterials => prevMaterials.map(m => ({
+      ...m,
+      subcontractorId: subcontractorIds.has(m.subcontractorId) ? m.subcontractorId : '',
+    })));
+
+    setLaborTrades(prevLaborTrades => prevLaborTrades.map(lt => ({
+      ...lt,
+      subcontractorId: subcontractorIds.has(lt.subcontractorId) ? lt.subcontractorId : '',
+    })));
+
+    setEquipment(prevEquipment => prevEquipment.map(eq => ({
+      ...eq,
+      subcontractorId: subcontractorIds.has(eq.subcontractorId) ? eq.subcontractorId : '',
+    })));
+
+    setScheduleTasks(prevScheduleTasks => prevScheduleTasks.map(st => ({
+      ...st,
+      subcontractorId: subcontractorIds.has(st.subcontractorId) ? st.subcontractorId : '',
+    })));
+    console.log("[LOG] Subcontractor assignments cleaned up.");
+  }, [subcontractors]);
+
 
   const currencies = [
     { code: 'USD', symbol: '$', name: 'US Dollar' },
@@ -206,8 +244,8 @@ const ConstructionCalculator = () => {
     { code: 'BRL', symbol: 'R$', name: 'Brazilian Real' },
     { code: 'CLP', symbol: '$', name: 'Chilean Peso' },
     { code: 'COP', symbol: '$', name: 'Colombian Peso' },
-    { code: 'CRC', symbol: '₡', name: 'Costa Rican Colón' },
-    { code: 'CUP', symbol: '₱', name: 'Cuban Peso' },
+    { code: 'CRC', symbol: '', name: 'Costa Rican Colón' },
+    { code: 'CUP', symbol: '', name: 'Cuban Peso' },
     { code: 'DOP', symbol: 'RD$', name: 'Dominican Peso' },
     { code: 'ECU', symbol: '$', name: 'Ecuadorian Sucre (historical, USD used)' },
     { code: 'GTQ', symbol: 'Q', name: 'Guatemalan Quetzal' },
@@ -217,7 +255,7 @@ const ConstructionCalculator = () => {
     { code: 'NIO', symbol: 'C$', name: 'Nicaraguan Córdoba' },
     { code: 'PAB', symbol: 'B/.', name: 'Panamanian Balboa' },
     { code: 'PEN', symbol: 'S/.', name: 'Peruvian Sol' },
-    { code: 'PYG', symbol: '₲', name: 'Paraguayan Guarani' },
+    { code: 'PYG', symbol: '', name: 'Paraguayan Guarani' },
     { code: 'SRD', symbol: '$', name: 'Surinamese Dollar' },
     { code: 'TTD', symbol: 'TT$', name: 'Trinidad and Tobago Dollar' },
     { code: 'UYU', symbol: '$U', name: 'Uruguayan Peso' },
@@ -242,6 +280,7 @@ const ConstructionCalculator = () => {
       costCalculatorTab: 'Cost Calculator',
       schedulingTab: 'Scheduling',
       costForecastTab: 'Cost Forecast',
+      subcontractorsTab: 'Subcontractors', // New
       addMaterial: 'Add New Material',
       materialName: 'Material Name',
       materialDescription: 'Description (Optional)',
@@ -285,7 +324,7 @@ const ConstructionCalculator = () => {
       exportExcel: 'Export Excel',
       totalMaterialCost: 'Total Material Cost',
       totalProjectLaborCost: 'Total Project Labor Cost',
-      totalEquipmentCost: 'Total Equipment Cost', // New
+      totalEquipmentCost: 'Total Equipment Cost',
       grandTotal: 'Grand Total:',
       area: 'Area Coverage',
       linear: 'Linear Measurement',
@@ -298,7 +337,7 @@ const ConstructionCalculator = () => {
       metric: 'Metric',
       noMaterials: 'No materials added yet. Use the form above to add materials.',
       noLaborTrades: 'No project labor trades added yet. Use the form above to add trades.',
-      noEquipment: 'No equipment added yet. Use the form above to add equipment.', // New
+      noEquipment: 'No equipment added yet. Use the form above to add equipment.',
       fillRequired: 'Please fill in all required fields',
       currency: 'Currency',
       baseUnits: 'Base Units:',
@@ -344,8 +383,8 @@ const ConstructionCalculator = () => {
       cubicMeters: 'm³',
       totalBeams: 'Total Beams:',
       unitConverters: 'Unit Converters',
-      feetToInches: 'Feet ↔ Inches',
-      metersToCentimeters: 'Meters ↔ Centimeters',
+      feetToInches: 'Feet  Inches',
+      metersToCentimeters: 'Meters  Centimeters',
       feet: 'Feet',
       meters: 'Meters',
       inches: 'Inches',
@@ -402,12 +441,14 @@ const ConstructionCalculator = () => {
       startDate: 'Start Date',
       endDate: 'End Date',
       assignedMaterials: 'Assigned Materials',
-      assignedEquipment: 'Assigned Equipment', // New
+      assignedEquipment: 'Assigned Equipment',
+      assignedSubcontractor: 'Assigned Subcontractor', // New
       assignMaterialsPlaceholder: 'Select materials for this task',
-      assignEquipmentPlaceholder: 'Select equipment for this task', // New
+      assignEquipmentPlaceholder: 'Select equipment for this task',
+      assignSubcontractorPlaceholder: 'Select a subcontractor for this task', // New
       addScheduleTask: 'Add Task to Schedule',
       noScheduleTasks: 'No tasks added yet. Use the form above to create a schedule.',
-      exportSchedule: 'Export Schedule (JSON)',
+      exportSchedule: 'Export Schedule', // Modified
       scheduleExpectedFormat: 'Expected JSON format: [{ "taskName": "...", "startDate": "YYYY-MM-DD", "endDate": "YYYY-MM-DD", "assignedMaterialIds": [material_id_1, material_id_2] }]',
       viewSubmittal: 'View Submittal',
       viewInvoice: 'View Invoice',
@@ -419,7 +460,7 @@ const ConstructionCalculator = () => {
       land: 'Land',
       material: 'Material',
       labor: 'Labor',
-      equipment: 'Equipment', // New category
+      equipment: 'Equipment',
       other: 'Other',
       assignedTasks: 'Assigned Schedule Tasks',
       assignTasksPlaceholder: 'Select tasks for this cost',
@@ -429,42 +470,58 @@ const ConstructionCalculator = () => {
       totalLandCost: 'Total Land Cost:',
       totalMaterialForecastCost: 'Total Material Forecast Cost:',
       totalLaborForecastCost: 'Total Labor Forecast Cost:',
-      totalEquipmentForecastCost: 'Total Equipment Forecast Cost:', // New
+      totalEquipmentForecastCost: 'Total Equipment Forecast Cost:',
       totalOtherCost: 'Total Other Cost:',
       grandTotalForecast: 'Grand Total Forecast:',
       ph_costName: 'e.g., Land Acquisition, Permit Fees',
       ph_amount: 'e.g., 50000',
       // Equipment translations
-      addEquipment: 'Add New Equipment', // New
-      equipmentName: 'Equipment Name', // New
-      equipmentDescription: 'Description (Optional)', // New
-      equipmentType: 'Equipment Type', // New
-      purchase: 'Purchase', // New
-      rental: 'Rental', // New
-      purchaseCost: `Purchase Cost (${selectedCurrency.symbol})`, // New
-      usefulLifeYears: 'Useful Life (Years, Optional)', // New
-      rentalRate: `Rental Rate (${selectedCurrency.symbol})`, // New
-      rentalUnit: 'Rental Unit', // New
-      numberOfDays: 'Number of Days', // New
-      numberOfHours: 'Number of Hours (per day)', // New
-      day: 'Day', // New
-      week: 'Week', // New
-      month: 'Month', // New
-      hour: 'Hour', // New
-      equipmentSpecificLabor: 'Equipment-Specific Labor (Optional)', // New
-      equipmentLaborTrade: 'Labor Trade', // New
-      equipmentLaborRate: `Rate (${selectedCurrency.symbol}/hr)`, // New
-      equipmentLaborHours: 'Hours', // New
-      ph_equipmentName: 'e.g., Excavator, Scaffolding, Drill', // New
-      ph_equipmentDescription: 'e.g., Heavy-duty, 20ft, Cordless', // New
-      ph_purchaseCost: 'e.g., 75000', // New
-      ph_usefulLifeYears: 'e.g., 10', // New
-      ph_rentalRate: 'e.g., 300', // New
-      ph_numberOfDays: 'e.g., 5', // New
-      ph_numberOfHours: 'e.g., 8', // New
-      ph_equipmentLaborTrade: 'e.g., Operator', // New
-      ph_equipmentLaborRate: '40', // New
-      ph_equipmentLaborHours: '8', // New
+      addEquipment: 'Add New Equipment',
+      equipmentName: 'Equipment Name',
+      equipmentDescription: 'Description (Optional)',
+      equipmentType: 'Equipment Type',
+      purchase: 'Purchase',
+      rental: 'Rental',
+      purchaseCost: `Purchase Cost (${selectedCurrency.symbol})`,
+      usefulLifeYears: 'Useful Life (Years, Optional)',
+      rentalRate: `Rental Rate (${selectedCurrency.symbol})`,
+      rentalUnit: 'Rental Unit',
+      numberOfDays: 'Number of Days',
+      numberOfHours: 'Number of Hours (per day)',
+      day: 'Day',
+      week: 'Week',
+      month: 'Month',
+      hour: 'Hour',
+      equipmentSpecificLabor: 'Equipment-Specific Labor (Optional)',
+      equipmentLaborTrade: 'Labor Trade',
+      equipmentLaborRate: `Rate (${selectedCurrency.symbol}/hr)`,
+      equipmentLaborHours: 'Hours',
+      ph_equipmentName: 'e.g., Excavator, Scaffolding, Drill',
+      ph_equipmentDescription: 'e.g., Heavy-duty, 20ft, Cordless',
+      ph_purchaseCost: 'e.g., 75000',
+      ph_usefulLifeYears: 'e.g., 10',
+      ph_rentalRate: 'e.g., 300',
+      ph_numberOfDays: 'e.g., 5',
+      ph_numberOfHours: 'e.g., 8',
+      ph_equipmentLaborTrade: 'e.g., Operator',
+      ph_equipmentLaborRate: '40',
+      ph_equipmentLaborHours: '8',
+      // Subcontractor translations
+      addSubcontractor: 'Add New Subcontractor', // New
+      subcontractorName: 'Subcontractor Name', // New
+      companyName: 'Company Name', // New
+      contactInfo: 'Contact Info (Email/Phone)', // New
+      addContact: 'Add Subcontractor', // New
+      subcontractorsList: 'Subcontractors List', // New
+      noSubcontractors: 'No subcontractors added yet. Use the form above to add subcontractors.', // New
+      totalCostForSubcontractor: 'Total Cost for Subcontractor', // New
+      subcontractorMaterialCost: 'Material Cost', // New
+      subcontractorLaborCost: 'Labor Cost', // New
+      subcontractorEquipmentCost: 'Equipment Cost', // New
+      subcontractorGrandTotal: 'Grand Total for Subcontractor', // New
+      ph_subcontractorName: 'e.g., John Doe', // New
+      ph_companyName: 'e.g., ABC Construction Inc.', // New
+      ph_contactInfo: 'e.g., john@example.com, 555-123-4567', // New
     },
     es: {
       title: 'Calculadora Avanzada de Costos de Construcción',
@@ -472,6 +529,7 @@ const ConstructionCalculator = () => {
       costCalculatorTab: 'Calculadora de Costos',
       schedulingTab: 'Programación',
       costForecastTab: 'Pronóstico de Costos',
+      subcontractorsTab: 'Subcontratistas', // New
       addMaterial: 'Agregar Nuevo Material',
       materialName: 'Nombre del Material',
       materialDescription: 'Descripción (Opcional)',
@@ -574,8 +632,8 @@ const ConstructionCalculator = () => {
       cubicMeters: 'm³',
       totalBeams: 'Total de Vigas:',
       unitConverters: 'Convertidores de Unidades',
-      feetToInches: 'Pies ↔ Pulgadas',
-      metersToCentimeters: 'Metros ↔ Centímetros',
+      feetToInches: 'Pies  Pulgadas',
+      metersToCentimeters: 'Metros  Centímetros',
       feet: 'Pies',
       meters: 'Metros',
       inches: 'Pulgadas',
@@ -633,11 +691,13 @@ const ConstructionCalculator = () => {
       endDate: 'Fecha de Fin',
       assignedMaterials: 'Materiales Asignados',
       assignedEquipment: 'Equipo Asignado',
+      assignedSubcontractor: 'Subcontratista Asignado', // New
       assignMaterialsPlaceholder: 'Seleccionar materiales para esta tarea',
       assignEquipmentPlaceholder: 'Seleccionar equipo para esta tarea',
+      assignSubcontractorPlaceholder: 'Seleccionar un subcontratista para esta tarea', // New
       addScheduleTask: 'Agregar Tarea al Programa',
       noScheduleTasks: 'No se han agregado tareas aún. Use el formulario de arriba para crear un programa.',
-      exportSchedule: 'Exportar Programa (JSON)',
+      exportSchedule: 'Exportar Programa', // Modified
       scheduleExpectedFormat: 'Formato JSON esperado: [{ "taskName": "...", "startDate": "AAAA-MM-DD", "endDate": "AAAA-MM-DD", "assignedMaterialIds": [id_material_1, id_material_2] }]',
       viewSubmittal: 'Ver Presentación',
       viewInvoice: 'Ver Factura',
@@ -695,6 +755,22 @@ const ConstructionCalculator = () => {
       ph_equipmentLaborTrade: 'ej., Operador',
       ph_equipmentLaborRate: '40',
       ph_equipmentLaborHours: '8',
+      // Subcontractor translations
+      addSubcontractor: 'Agregar Nuevo Subcontratista', // New
+      subcontractorName: 'Nombre del Subcontratista', // New
+      companyName: 'Nombre de la Empresa', // New
+      contactInfo: 'Información de Contacto (Correo/Teléfono)', // New
+      addContact: 'Agregar Subcontratista', // New
+      subcontractorsList: 'Lista de Subcontratistas', // New
+      noSubcontractors: 'No se han agregado subcontratistas aún. Use el formulario de arriba para agregar subcontratistas.', // New
+      totalCostForSubcontractor: 'Costo Total para Subcontratista', // New
+      subcontractorMaterialCost: 'Costo de Materiales', // New
+      subcontractorLaborCost: 'Costo de Mano de Obra', // New
+      subcontractorEquipmentCost: 'Costo de Equipo', // New
+      subcontractorGrandTotal: 'Total General para Subcontratista', // New
+      ph_subcontractorName: 'ej., Juan Pérez', // New
+      ph_companyName: 'ej., Construcciones ABC S.A.', // New
+      ph_contactInfo: 'ej., juan@ejemplo.com, 555-123-4567', // New
     },
     it: {
       title: 'Calcolatore Avanzato Costi di Costruzione',
@@ -702,6 +778,7 @@ const ConstructionCalculator = () => {
       costCalculatorTab: 'Calcolatore Costi',
       schedulingTab: 'Pianificazione',
       costForecastTab: 'Previsione Costi',
+      subcontractorsTab: 'Subappaltatori', // New
       addMaterial: 'Aggiungi Nuovo Materiale',
       materialName: 'Nome Materiale',
       materialDescription: 'Descrizione (Opzionale)',
@@ -784,8 +861,8 @@ const ConstructionCalculator = () => {
       concreteWaterQty: 'Quantità Acqua',
       concreteWaterUnit: 'Unità Acqua',
       concreteWaterCostPerUnit: `Costo per Unità Acqua (${selectedCurrency.symbol})`,
-      concreteMixerRental: 'Costo Noleggio Betoniera (Opzionale)',
-      concreteAncillaryCost: 'Altri Costi Accessori Calcestruzzo (Opzionale)',
+      concreteMixerRental: 'Costo Noleggio Betoniera (Opcionale)',
+      concreteAncillaryCost: 'Altri Costi Accessori Calcestruzzo (Opcionale)',
       concreteAncillaryCostName: 'Nome Costo Accessorio',
       concreteAncillaryCostValue: `Valore Costo Accessorio (${selectedCurrency.symbol})`,
       cuyd: 'yd³',
@@ -804,8 +881,8 @@ const ConstructionCalculator = () => {
       cubicMeters: 'm³',
       totalBeams: 'Totale Travi:',
       unitConverters: 'Convertitori di Unità',
-      feetToInches: 'Piedi ↔ Pollici',
-      metersToCentimeters: 'Metri ↔ Centimetri',
+      feetToInches: 'Piedi  Pollici',
+      metersToCentimeters: 'Metri  Centimetri',
       feet: 'Piedi',
       meters: 'Metri',
       inches: 'Pollici',
@@ -863,11 +940,13 @@ const ConstructionCalculator = () => {
       endDate: 'Fecha de Fin',
       assignedMaterials: 'Materiales Asignados',
       assignedEquipment: 'Equipo Asignado',
+      assignedSubcontractor: 'Subcontratista Asignado', // New
       assignMaterialsPlaceholder: 'Seleccionar materiales para esta tarea',
       assignEquipmentPlaceholder: 'Seleccionar equipo para esta tarea',
+      assignSubcontractorPlaceholder: 'Seleccionar un subcontratista para esta tarea', // New
       addScheduleTask: 'Agregar Tarea al Programa',
       noScheduleTasks: 'No se han agregado tareas aún. Use el formulario de arriba para crear un programa.',
-      exportSchedule: 'Exportar Programa (JSON)',
+      exportSchedule: 'Exportar Programa', // Modified
       scheduleExpectedFormat: 'Formato JSON esperado: [{ "taskName": "...", "startDate": "AAAA-MM-DD", "endDate": "AAAA-MM-DD", "assignedMaterialIds": [id_material_1, id_material_2] }]',
       viewSubmittal: 'Ver Presentación',
       viewInvoice: 'Ver Factura',
@@ -925,6 +1004,22 @@ const ConstructionCalculator = () => {
       ph_equipmentLaborTrade: 'es., Operatore',
       ph_equipmentLaborRate: '40',
       ph_equipmentLaborHours: '8',
+      // Subcontractor translations
+      addSubcontractor: 'Aggiungi Nuovo Subappaltatore', // New
+      subcontractorName: 'Nome Subappaltatore', // New
+      companyName: 'Nome Azienda', // New
+      contactInfo: 'Informazioni di Contatto (Email/Telefono)', // New
+      addContact: 'Aggiungi Subappaltatore', // New
+      subcontractorsList: 'Lista Subappaltatori', // New
+      noSubcontractors: 'Nessun subappaltatore aggiunto. Usa il modulo sopra per aggiungere subappaltatori.', // New
+      totalCostForSubcontractor: 'Costo Totale per Subappaltatore', // New
+      subcontractorMaterialCost: 'Costo Materiali', // New
+      subcontractorLaborCost: 'Costo Manodopera', // New
+      subcontractorEquipmentCost: 'Costo Attrezzature', // New
+      subcontractorGrandTotal: 'Totale Generale per Subappaltatore', // New
+      ph_subcontractorName: 'es., Mario Rossi', // New
+      ph_companyName: 'es., Costruzioni Alfa S.r.l.', // New
+      ph_contactInfo: 'es., mario@esempio.com, 555-123-4567', // New
     },
     fr: {
       title: 'Calculateur Avancé de Coûts de Construction',
@@ -932,6 +1027,7 @@ const ConstructionCalculator = () => {
       costCalculatorTab: 'Calculateur de Coûts',
       schedulingTab: 'Planification',
       costForecastTab: 'Prévision des Coûts',
+      subcontractorsTab: 'Sous-traitants', // New
       addMaterial: 'Ajouter un Nouveau Matériau',
       materialName: 'Nom du Matériau',
       materialDescription: 'Description (Facultatif)',
@@ -1034,8 +1130,8 @@ const ConstructionCalculator = () => {
       cubicMeters: 'm³',
       totalBeams: 'Total des Poutres:',
       unitConverters: 'Convertisseurs d\'Unités',
-      feetToInches: 'Pieds ↔ Pouces',
-      metersToCentimeters: 'Mètres ↔ Centimètres',
+      feetToInches: 'Pieds  Pouces',
+      metersToCentimeters: 'Mètres  Centimètres',
       feet: 'Pieds',
       meters: 'Mètres',
       inches: 'Pouces',
@@ -1093,11 +1189,13 @@ const ConstructionCalculator = () => {
       endDate: 'Date de Fin',
       assignedMaterials: 'Matériaux Assignés',
       assignedEquipment: 'Équipement Assigné',
+      assignedSubcontractor: 'Sous-traitant Assigné', // New
       assignMaterialsPlaceholder: 'Sélectionner les matériaux pour cette tâche',
       assignEquipmentPlaceholder: 'Sélectionner l\'équipement pour cette tâche',
+      assignSubcontractorPlaceholder: 'Sélectionner un sous-traitant pour cette tâche', // New
       addScheduleTask: 'Ajouter la Tâche au Calendrier',
       noScheduleTasks: 'Aucune tâche ajoutée. Utilisez le formulaire ci-dessus pour créer un calendrier.',
-      exportSchedule: 'Exporter le Calendrier (JSON)',
+      exportSchedule: 'Exporter le Calendrier', // Modified
       scheduleExpectedFormat: 'Format JSON attendu : [{ "taskName": "...", "startDate": "AAAA-MM-JJ", "endDate": "AAAA-MM-JJ", "assignedMaterialIds": [id_materiau_1, id_materiau_2] }]',
       viewSubmittal: 'Voir Soumission',
       viewInvoice: 'Voir Facture',
@@ -1155,6 +1253,22 @@ const ConstructionCalculator = () => {
       ph_equipmentLaborTrade: 'ex., Opérateur',
       ph_equipmentLaborRate: '40',
       ph_equipmentLaborHours: '8',
+      // Subcontractor translations
+      addSubcontractor: 'Ajouter un Nouveau Sous-traitant', // New
+      subcontractorName: 'Nom du Sous-traitant', // New
+      companyName: 'Nom de l\'Entreprise', // New
+      contactInfo: 'Informations de Contact (Email/Téléphone)', // New
+      addContact: 'Ajouter un Sous-traitant', // New
+      subcontractorsList: 'Liste des Sous-traitants', // New
+      noSubcontractors: 'Aucun sous-traitant ajouté. Utilisez le formulaire ci-dessus pour ajouter des sous-traitants.', // New
+      totalCostForSubcontractor: 'Coût Total pour le Sous-traitant', // New
+      subcontractorMaterialCost: 'Coût des Matériaux', // New
+      subcontractorLaborCost: 'Coût de la Main-d\'œuvre', // New
+      subcontractorEquipmentCost: 'Coût de l\'Équipement', // New
+      subcontractorGrandTotal: 'Total Général pour le Sous-traitant', // New
+      ph_subcontractorName: 'ex., Jean Dupont', // New
+      ph_companyName: 'ex., Entreprise BTP Inc.', // New
+      ph_contactInfo: 'ex., jean@exemple.com, 555-123-4567', // New
     },
     de: {
       title: 'Erweiterter Baukostenrechner',
@@ -1162,6 +1276,7 @@ const ConstructionCalculator = () => {
       costCalculatorTab: 'Kostenrechner',
       schedulingTab: 'Zeitplanung',
       costForecastTab: 'Kostenprognose',
+      subcontractorsTab: 'Subunternehmer', // New
       addMaterial: 'Neues Material hinzufügen',
       materialName: 'Materialname',
       materialDescription: 'Beschreibung (Optional)',
@@ -1264,8 +1379,8 @@ const ConstructionCalculator = () => {
       cubicMeters: 'm³',
       totalBeams: 'Gesamtbalken:',
       unitConverters: 'Einheitenumrechner',
-      feetToInches: 'Fuß ↔ Zoll',
-      metersToCentimeters: 'Meter ↔ Zentimeter',
+      feetToInches: 'Fuß  Zoll',
+      metersToCentimeters: 'Meter  Zentimeter',
       feet: 'Fuß',
       meters: 'Meter',
       inches: 'Zoll',
@@ -1369,49 +1484,66 @@ const ConstructionCalculator = () => {
       ph_equipmentLaborTrade: 'z.B. Bediener',
       ph_equipmentLaborRate: '40',
       ph_equipmentLaborHours: '8',
+      // Subcontractor translations
+      addSubcontractor: 'Neuen Subunternehmer hinzufügen', // New
+      subcontractorName: 'Name des Subunternehmers', // New
+      companyName: 'Firmenname', // New
+      contactInfo: 'Kontaktinformationen (E-Mail/Telefon)', // New
+      addContact: 'Subunternehmer hinzufügen', // New
+      subcontractorsList: 'Subunternehmerliste', // New
+      noSubcontractors: 'Noch keine Subunternehmer hinzugefügt. Verwenden Sie das obige Formular, um Subunternehmer hinzuzufügen.', // New
+      totalCostForSubcontractor: 'Gesamtkosten für Subunternehmer', // New
+      subcontractorMaterialCost: 'Materialkosten', // New
+      subcontractorLaborCost: 'Arbeitskosten', // New
+      subcontractorEquipmentCost: 'Ausrüstungskosten', // New
+      subcontractorGrandTotal: 'Gesamtsumme für Subunternehmer', // New
+      ph_subcontractorName: 'z.B. Max Mustermann', // New
+      ph_companyName: 'z.B. Musterbau GmbH', // New
+      ph_contactInfo: 'z.B. max@beispiel.de, 0123-456789', // New
     },
     zh: {
       title: '高级建筑成本计算器',
-      subtitle: '添加多种材料、设备并计算综合项目成本',
+      subtitle: '添加多种材料、设备并计算全面的项目成本',
       costCalculatorTab: '成本计算器',
-      schedulingTab: '日程安排',
+      schedulingTab: '排期',
       costForecastTab: '成本预测',
+      subcontractorsTab: '分包商', // New
       addMaterial: '添加新材料',
       materialName: '材料名称',
-      materialDescription: '描述 (可选)',
+      materialDescription: '描述（可选）',
       calculationType: '计算类型',
-      length: units === 'imperial' ? '长度 (英尺)' : '长度 (米)',
-      width: units === 'imperial' ? '宽度 (英尺)' : '宽度 (米)',
-      height: units === 'imperial' ? '高度 (英尺)' : '高度 (米)',
-      lengthFt: '长度 (英尺)',
-      widthFt: '宽度 (英尺)',
-      heightFt: '高度 (英尺)',
-      lengthM: '长度 (米)',
-      widthM: '宽度 (米)',
-      heightM: '高度 (米)',
+      length: units === 'imperial' ? '长度（英尺）' : '长度（米）',
+      width: units === 'imperial' ? '宽度（英尺）' : '宽度（米）',
+      height: units === 'imperial' ? '高度（英尺）' : '高度（米）',
+      lengthFt: '长度（英尺）',
+      widthFt: '宽度（英尺）',
+      heightFt: '高度（英尺）',
+      lengthM: '长度（米）',
+      widthM: '宽度（米）',
+      heightM: '高度（米）',
       quantity: '数量/单位',
-      costPerUnit: `单位成本 (${selectedCurrency.symbol})`,
-      costPerSqFt: `每平方英尺成本 (${selectedCurrency.symbol})`,
-      costPerSqM: `每平方米成本 (${selectedCurrency.symbol})`,
-      costPerLinearFt: `每线性英尺成本 (${selectedCurrency.symbol})`,
-      costPerLinearM: `每线性米成本 (${selectedCurrency.symbol})`,
-      costPerIndividualUnit: `每单位成本 (${selectedCurrency.symbol})`,
-      costPerBeam: `每梁成本 (${selectedCurrency.symbol})`,
+      costPerUnit: `单位成本（${selectedCurrency.symbol}）`,
+      costPerSqFt: `每平方英尺成本（${selectedCurrency.symbol}）`,
+      costPerSqM: `每平方米成本（${selectedCurrency.symbol}）`,
+      costPerLinearFt: `每线性英尺成本（${selectedCurrency.symbol}）`,
+      costPerLinearM: `每线性米成本（${selectedCurrency.symbol}）`,
+      costPerIndividualUnit: `每单位成本（${selectedCurrency.symbol}）`,
+      costPerBeam: `每梁成本（${selectedCurrency.symbol}）`,
       wastePercentage: '损耗百分比',
-      submittalLink: '提交链接 (URL)',
-      invoiceLink: '发票/形式发票链接 (URL)',
-      addToList: '添加到材料列表',
-      materialsList: '材料列表',
+      submittalLink: '提交链接（URL）',
+      invoiceLink: '发票/形式发票链接（URL）',
+      addToList: '添加到材料清单',
+      materialsList: '材料清单',
       laborDetails: '项目人工详情',
       tradeName: '工种名称',
-      hourlyRate: `每小时费率 (${selectedCurrency.symbol}/小时)`,
+      hourlyRate: `每小时费率（${selectedCurrency.symbol}/小时）`,
       totalHours: '总小时数',
       numberOfLaborers: '工人数量',
       addTrade: '添加项目工种',
       laborCostBreakdown: '项目人工成本明细',
-      materialSpecificLabor: '材料特定人工 (可选)',
+      materialSpecificLabor: '材料特定人工（可选）',
       materialLaborTrade: '工种',
-      materialLaborRate: `费率 (${selectedCurrency.symbol}/小时)`,
+      materialLaborRate: `费率（${selectedCurrency.symbol}/小时）`,
       materialLaborHours: '小时数',
       calculate: '计算项目总成本',
       costSummary: '成本摘要',
@@ -1420,12 +1552,12 @@ const ConstructionCalculator = () => {
       totalMaterialCost: '总材料成本',
       totalProjectLaborCost: '总项目人工成本',
       totalEquipmentCost: '总设备成本',
-      grandTotal: '总计:',
+      grandTotal: '总计：',
       area: '面积覆盖',
       linear: '线性测量',
       units: '独立单位',
       beams: '梁/框架',
-      concrete: '混凝土构件',
+      concrete: '混凝土组件',
       remove: '移除',
       edit: '编辑',
       imperial: '英制',
@@ -1435,39 +1567,39 @@ const ConstructionCalculator = () => {
       noEquipment: '尚未添加设备。请使用上方表格添加设备。',
       fillRequired: '请填写所有必填字段',
       currency: '货币',
-      baseUnits: '基本单位:',
-      wasteAmount: '损耗量:',
-      totalUnitsWithWaste: '总单位 (含损耗):',
-      totalCost: '总成本:',
-      materialLaborCost: '材料人工成本:',
+      baseUnits: '基本单位：',
+      wasteAmount: '损耗量：',
+      totalUnitsWithWaste: '总单位（含损耗）：',
+      totalCost: '总成本：',
+      materialLaborCost: '材料人工成本：',
       types: {
-        area: '基于面积 (例如：地板、油漆、石膏板、混凝土、绝缘材料)',
-        linear: '基于线性 (例如：修剪、管道)',
-        units: '基于单位 (例如：马桶、固定装置、门、水箱、化粪池)',
-        beams: '用于结构梁、托梁、立柱 (计算总线性英尺/梁的数量)',
-        concrete: '混凝土构件 (水泥、沙子、碎石、水、搅拌机租赁、辅助费用)',
+        area: '基于面积（例如，地板、油漆、石膏板、混凝土、绝缘材料）',
+        linear: '基于线性（例如，装饰条、管道）',
+        units: '基于单位（例如，马桶、固定装置、门、水箱、化粪池）',
+        beams: '用于结构梁、托梁、立柱（计算总线性英尺/梁的数量）',
+        concrete: '混凝土组件（水泥、沙子、碎石、水、搅拌机租赁、辅助成本）',
       },
       concreteCementBags: '水泥袋',
-      concreteCementCostPerBag: `每袋成本 (${selectedCurrency.symbol})`,
+      concreteCementCostPerBag: `每袋成本（${selectedCurrency.symbol}）`,
       concreteSandQty: '沙子数量',
       concreteSandUnit: '沙子单位',
-      concreteSandCostPerUnit: `每沙子单位成本 (${selectedCurrency.symbol})`,
+      concreteSandCostPerUnit: `每沙子单位成本（${selectedCurrency.symbol}）`,
       concreteGravelQty: '碎石数量',
       concreteGravelUnit: '碎石单位',
-      concreteGravelCostPerUnit: `每碎石单位成本 (${selectedCurrency.symbol})`,
+      concreteGravelCostPerUnit: `每碎石单位成本（${selectedCurrency.symbol}）`,
       concreteWaterQty: '水数量',
       concreteWaterUnit: '水单位',
-      concreteWaterCostPerUnit: `每水单位成本 (${selectedCurrency.symbol})`,
-      concreteMixerRental: '搅拌机租赁成本 (可选)',
-      concreteAncillaryCost: '其他混凝土辅助成本 (可选)',
+      concreteWaterCostPerUnit: `每水单位成本（${selectedCurrency.symbol}）`,
+      concreteMixerRental: '搅拌机租赁成本（可选）',
+      concreteAncillaryCost: '其他混凝土辅助成本（可选）',
       concreteAncillaryCostName: '辅助成本名称',
-      concreteAncillaryCostValue: `辅助成本值 (${selectedCurrency.symbol})`,
+      concreteAncillaryCostValue: `辅助成本价值（${selectedCurrency.symbol}）`,
       cuyd: '立方码',
       cum: '立方米',
       gal: '加仑',
       liter: '升',
       batch: '批次',
-      concreteComponents: '混凝土构件:',
+      concreteComponents: '混凝土组件：',
       ft: '英尺',
       m: '米',
       sqft: '平方英尺',
@@ -1476,10 +1608,10 @@ const ConstructionCalculator = () => {
       linm: '线性米',
       cubicYards: '立方码',
       cubicMeters: '立方米',
-      totalBeams: '总梁数:',
+      totalBeams: '总梁数：',
       unitConverters: '单位转换器',
-      feetToInches: '英尺 ↔ 英寸',
-      metersToCentimeters: '米 ↔ 厘米',
+      feetToInches: '英尺  英寸',
+      metersToCentimeters: '米  厘米',
       feet: '英尺',
       meters: '米',
       inches: '英寸',
@@ -1487,18 +1619,18 @@ const ConstructionCalculator = () => {
       convert: '转换',
       inputUnit: '输入单位',
       outputUnit: '输出单位',
-      calculatedArea: '计算面积:',
-      individualBeamLengthFt: '单梁长度 (英尺)',
-      individualBeamWidthFt: '单梁宽度 (英尺) (可选)',
-      individualBeamHeightFt: '单梁高度 (英尺) (可选)',
-      individualBeamLengthM: '单梁长度 (米)',
-      individualBeamWidthM: '单梁宽度 (米) (可选)',
-      individualBeamHeightM: '单梁高度 (米) (可选)',
+      calculatedArea: '计算面积：',
+      individualBeamLengthFt: '单梁长度（英尺）',
+      individualBeamWidthFt: '单梁宽度（英尺）（可选）',
+      individualBeamHeightFt: '单梁高度（英尺）（可选）',
+      individualBeamLengthM: '单梁长度（米）',
+      individualBeamWidthM: '单梁宽度（米）（可选）',
+      individualBeamHeightM: '单梁高度（米）（可选）',
       totalSpan: '总跨度',
       spacing: '间距',
       // Placeholders
-      ph_materialName: '例如：石膏板、马桶、2x4 梁',
-      ph_materialDescription: '例如：防火、白色、100 加仑容量',
+      ph_materialName: '例如：石膏板、马桶、2x4梁',
+      ph_materialDescription: '例如：防火、白色、100加仑容量',
       ph_length: '英尺',
       ph_width: '英尺',
       ph_height: '英尺',
@@ -1527,10 +1659,28 @@ const ConstructionCalculator = () => {
       ph_ftInValue_ft: '例如：5.5',
       ph_mCmValue_cm: '例如：175',
       ph_mCmValue_m: '例如：1.75',
-      ph_submittalLink: '例如：https://example.com/石膏板-提交.pdf',
-      ph_invoiceLink: '例如：https://example.com/马桶-发票.pdf',
+      ph_submittalLink: '例如：https://example.com/drywall-submittal.pdf',
+      ph_invoiceLink: '例如：https://example.com/toilet-invoice.pdf',
+      // Scheduling translations
+      scheduleTitle: '施工进度表',
+      addTask: '添加新任务',
+      taskName: '任务名称',
+      startDate: '开始日期',
+      endDate: '结束日期',
+      assignedMaterials: '分配的材料',
+      assignedEquipment: '分配的设备',
+      assignedSubcontractor: '分配的分包商', // New
+      assignMaterialsPlaceholder: '选择此任务的材料',
+      assignEquipmentPlaceholder: '选择此任务的设备',
+      assignSubcontractorPlaceholder: '选择此任务的分包商', // New
+      addScheduleTask: '添加到进度表',
+      noScheduleTasks: '尚未添加任务。请使用上方表格创建进度表。',
+      exportSchedule: '导出进度表', // Modified
+      scheduleExpectedFormat: '预期JSON格式：[{ "taskName": "...", "startDate": "YYYY-MM-DD", "endDate": "YYYY-MM-DD", "assignedMaterialIds": [material_id_1, material_id_2] }]',
+      viewSubmittal: '查看提交',
+      viewInvoice: '查看发票',
       // Cost Forecast translations
-      costForecastTitle: '施工项目成本预测',
+      costForecastTitle: '建筑项目成本预测',
       addForecastCost: '添加新预测成本',
       costCategory: '成本类别',
       amount: '金额',
@@ -1539,41 +1689,41 @@ const ConstructionCalculator = () => {
       labor: '人工',
       equipment: '设备',
       other: '其他',
-      assignedTasks: '分配的进度任务',
+      assignedTasks: '已分配的进度任务',
       assignTasksPlaceholder: '选择此成本的任务',
-      addForecastItem: '添加预测项',
-      noForecastCosts: '尚未添加预测成本。请使用上方表格添加成本项。',
+      addForecastItem: '添加预测项目',
+      noForecastCosts: '尚未添加预测成本。请使用上方表格添加成本项目。',
       totalForecastCostByCategory: '按类别划分的总预测成本',
-      totalLandCost: '土地总成本:',
-      totalMaterialForecastCost: '材料总预测成本:',
-      totalLaborForecastCost: '人工总预测成本:',
-      totalEquipmentForecastCost: '设备总预测成本:',
-      totalOtherCost: '其他总成本:',
-      grandTotalForecast: '总预测:',
+      totalLandCost: '总土地成本：',
+      totalMaterialForecastCost: '总材料预测成本：',
+      totalLaborForecastCost: '总人工预测成本：',
+      totalEquipmentForecastCost: '总设备预测成本：',
+      totalOtherCost: '总其他成本：',
+      grandTotalForecast: '总预测：',
       ph_costName: '例如：土地购置、许可证费用',
       ph_amount: '例如：50000',
       // Equipment translations
       addEquipment: '添加新设备',
       equipmentName: '设备名称',
-      equipmentDescription: '描述 (可选)',
+      equipmentDescription: '描述（可选）',
       equipmentType: '设备类型',
       purchase: '购买',
       rental: '租赁',
-      purchaseCost: `购买成本 (${selectedCurrency.symbol})`,
-      usefulLifeYears: '使用寿命 (年, 可选)',
-      rentalRate: `租赁费率 (${selectedCurrency.symbol})`,
+      purchaseCost: `购买成本（${selectedCurrency.symbol}）`,
+      usefulLifeYears: '使用寿命（年，可选）',
+      rentalRate: `租赁费率（${selectedCurrency.symbol}）`,
       rentalUnit: '租赁单位',
       numberOfDays: '天数',
-      numberOfHours: '小时数 (每天)',
+      numberOfHours: '小时数（每天）',
       day: '天',
       week: '周',
       month: '月',
       hour: '小时',
-      equipmentSpecificLabor: '设备特定人工 (可选)',
+      equipmentSpecificLabor: '设备特定人工（可选）',
       equipmentLaborTrade: '工种',
-      equipmentLaborRate: `费率 (${selectedCurrency.symbol}/小时)`,
+      equipmentLaborRate: `费率（${selectedCurrency.symbol}/小时）`,
       equipmentLaborHours: '小时数',
-      ph_equipmentName: '例如：挖掘机、脚手架、电钻',
+      ph_equipmentName: '例如：挖掘机、脚手架、钻机',
       ph_equipmentDescription: '例如：重型、20英尺、无绳',
       ph_purchaseCost: '例如：75000',
       ph_usefulLifeYears: '例如：10',
@@ -1583,6 +1733,22 @@ const ConstructionCalculator = () => {
       ph_equipmentLaborTrade: '例如：操作员',
       ph_equipmentLaborRate: '40',
       ph_equipmentLaborHours: '8',
+      // Subcontractor translations
+      addSubcontractor: '添加新分包商', // New
+      subcontractorName: '分包商名称', // New
+      companyName: '公司名称', // New
+      contactInfo: '联系信息（电子邮件/电话）', // New
+      addContact: '添加分包商', // New
+      subcontractorsList: '分包商列表', // New
+      noSubcontractors: '尚未添加分包商。请使用上方表格添加分包商。', // New
+      totalCostForSubcontractor: '分包商总成本', // New
+      subcontractorMaterialCost: '材料成本', // New
+      subcontractorLaborCost: '人工成本', // New
+      subcontractorEquipmentCost: '设备成本', // New
+      subcontractorGrandTotal: '分包商总计', // New
+      ph_subcontractorName: '例如：张三', // New
+      ph_companyName: '例如：ABC 建筑公司', // New
+      ph_contactInfo: '例如：zhangsan@example.com, 13800138000', // New
     }
   };
 
@@ -1638,7 +1804,7 @@ const ConstructionCalculator = () => {
           newMaterialData.beamWidthM = material.beamWidthFt ? feetToMeters(toFeetDecimal(material.beamWidthFt)).toFixed(2) : '';
           newMaterialData.beamHeightM = material.beamHeightFt ? feetToMeters(toFeetDecimal(material.beamHeightFt)).toFixed(2) : '';
           newMaterialData.totalSpanM = feetToMeters(toFeetDecimal(material.totalSpanFt)).toFixed(2);
-          newMaterialData.spacingM = feetToMeters(toFeetDecimal(material.spacingFt)).toFixed(2);
+          newMaterialData.spacingM = feetToToMeters(toFeetDecimal(material.spacingFt)).toFixed(2);
 
           newMaterialData.beamLengthFt = '';
           newMaterialData.beamWidthFt = '';
@@ -1861,6 +2027,7 @@ const ConstructionCalculator = () => {
 
     const materialWithId = { ...newMaterial, id: Date.now() };
     setMaterials([...materials, materialWithId]);
+    console.log("[LOG] Material added:", materialWithId);
 
     setNewMaterial({
       name: '',
@@ -1888,7 +2055,7 @@ const ConstructionCalculator = () => {
       materialLaborTrade: '',
       materialLaborRate: '',
       materialLaborHours: '',
-      materialLaborNumberOfLaborers: 1, // Reset to default
+      materialLaborNumberOfLaborers: 1,
       concreteCementBags: '',
       concreteCementCostPerBag: '',
       concreteSandQty: '',
@@ -1905,11 +2072,13 @@ const ConstructionCalculator = () => {
       concreteAncillaryCostValue: '',
       submittalLink: '',
       invoiceLink: '',
+      subcontractorId: '', // Reset subcontractor assignment
     });
   };
 
   const removeMaterial = (id) => {
     setMaterials(materials.filter(m => m.id !== id));
+    console.log("[LOG] Material removed:", id);
   };
 
   const addLaborTrade = () => {
@@ -1918,11 +2087,13 @@ const ConstructionCalculator = () => {
       return;
     }
     setLaborTrades([...laborTrades, { ...newLaborTrade, id: Date.now() }]);
-    setNewLaborTrade({ tradeName: '', rate: '', hours: '', numberOfLaborers: 1 });
+    console.log("[LOG] Labor trade added:", newLaborTrade);
+    setNewLaborTrade({ tradeName: '', rate: '', hours: '', numberOfLaborers: 1, subcontractorId: '' }); // Reset subcontractor assignment
   };
 
   const removeLaborTrade = (id) => {
     setLaborTrades(laborTrades.filter(trade => trade.id !== id));
+    console.log("[LOG] Labor trade removed:", id);
   };
 
   // New: Calculate Equipment Cost
@@ -1938,56 +2109,15 @@ const ConstructionCalculator = () => {
       switch (item.rentalUnit) {
         case 'day':
           equipmentCost = rate * days;
-          if (hours > 0) { // Assuming hourly rate is additional to daily rate if specified
-            // This logic might need refinement based on how hourly rates are typically applied after daily.
-            // For now, let's assume a simple addition or a conversion if rate is per hour.
-            // If rentalUnit is 'day', and hours are provided, it implies a daily rate + hourly rate for extra hours
-            // Or, if rentalUnit is 'hour', then total hours = days * 8 (or assumed work hours) + extra hours
-            // For simplicity, let's assume if rentalUnit is 'day', it's a daily rate, and hours are for additional per-hour charges if the rate is also per hour.
-            // Let's simplify: if rentalUnit is 'day', total cost is rate * days. If rentalUnit is 'hour', total cost is rate * total hours.
-            // The current setup implies the rentalRate is per the selected unit (day/week/month/hour).
-            // So if rentalUnit is 'day', it's rate * days. If rentalUnit is 'hour', it's rate * hours.
-            // For now, let's assume if rentalUnit is 'day', hours are ignored unless specified.
-            // To handle both days and hours, we need to clarify if rentalRate is per day, and hours are extra, or if rentalRate is per hour and days convert to hours.
-            // Let's assume rentalRate is per the selected unit. If 'day', then rate * days. If 'hour', then rate * hours.
-            // To combine days and hours, we need a consistent unit. Let's convert everything to hours for calculation if possible.
-            // Or, if rentalUnit is 'day', then days * rate. If 'hour', then hours * rate.
-            // The user asked for "number of days and hours for equipment rental". This implies rentalRate might be per day AND there's an hourly rate for partial days or extra hours.
-            // Let's assume rentalRate is the primary rate (per day/week/month/hour), and numberOfDays/Hours are the quantities for that unit.
-            // If rentalUnit is 'day', then cost = rate * days.
-            // If rentalUnit is 'hour', then cost = rate * hours.
-            // If the user wants to specify both days AND hours, they need to select 'day' as unit and then the hours are extra.
-            // Let's use a simplified approach: if rentalUnit is 'day', it's rate * days. If rentalUnit is 'hour', it's rate * hours.
-            // If they input both days and hours, and select 'day' as unit, I'll calculate as rate * days. If 'hour', rate * hours.
-            // For a more robust solution, we'd need a "daily rate" and an "hourly overtime rate" or similar.
-            // For now, let's assume if `rentalUnit` is 'day', we use `numberOfDays`. If `rentalUnit` is 'hour', we use `numberOfHours`.
-            // If the user wants to combine, they should convert days to hours or vice versa.
-            // Let's make it simple: if rentalUnit is 'day', use days. If 'hour', use hours.
-            // The prompt says "Add a number of days and hours for equipment rental". This implies *both* should be used.
-            // Let's define the `rentalRate` as a base rate (e.g., per day), and `numberOfHours` as additional hours beyond a standard day.
-            // This would mean `rentalRate` is always per day, and `numberOfHours` is for partial days.
-            // This is getting complicated. Let's assume `rentalRate` is per `rentalUnit`.
-            // And if `rentalUnit` is 'day', `equipmentCost = rate * days`.
-            // If `rentalUnit` is 'hour', `equipmentCost = rate * hours`.
-            // The user's request "number of days and hours" suggests they want to specify a duration.
-            // Let's make `rentalRate` always be the rate per the chosen `rentalUnit` (day, week, month, hour).
-            // And `numberOfDays` and `numberOfHours` will be the quantities.
-            // If `rentalUnit` is 'day', then `equipmentCost = rate * numberOfDays`.
-            // If `rentalUnit` is 'hour', then `equipmentCost = rate * numberOfHours`.
-            // This means the user must choose between billing by day or by hour.
-            // If they want both, they need to add two equipment entries.
-            // This is the simplest interpretation of the request without overcomplicating the UI/logic.
-            equipmentCost = rate * days; // If rentalUnit is 'day', use days
-          }
           break;
         case 'week':
-          equipmentCost = rate * (days / 7); // Convert days to weeks
+          equipmentCost = rate * (days / 7);
           break;
         case 'month':
-          equipmentCost = rate * (days / 30); // Convert days to months (approx)
+          equipmentCost = rate * (days / 30);
           break;
         case 'hour':
-          equipmentCost = rate * hours; // If rentalUnit is 'hour', use hours
+          equipmentCost = rate * hours;
           break;
         default:
           equipmentCost = 0;
@@ -2033,6 +2163,7 @@ const ConstructionCalculator = () => {
 
     const equipmentWithId = { ...newEquipment, id: Date.now() };
     setEquipment([...equipment, equipmentWithId]);
+    console.log("[LOG] Equipment added:", equipmentWithId);
     setNewEquipment({
       name: '',
       description: '',
@@ -2049,12 +2180,14 @@ const ConstructionCalculator = () => {
       equipmentLaborNumberOfLaborers: 1,
       submittalLink: '',
       invoiceLink: '',
+      subcontractorId: '', // Reset subcontractor assignment
     });
   };
 
   // New: Remove Equipment
   const removeEquipment = (id) => {
     setEquipment(equipment.filter(e => e.id !== id));
+    console.log("[LOG] Equipment removed:", id);
   };
 
   const getTotalMaterialCost = () => {
@@ -2200,7 +2333,7 @@ const ConstructionCalculator = () => {
     const totalForecastLandCost = getTotalForecastCostByCategory('Land');
     const totalForecastMaterialCost = getTotalForecastCostByCategory('Material');
     const totalForecastLaborCost = getTotalForecastCostByCategory('Labor');
-    const totalForecastEquipmentCost = getTotalForecastCostByCategory('Equipment'); // New
+    const totalForecastEquipmentCost = getTotalForecastCostByCategory('Equipment');
     const totalForecastOtherCost = getTotalForecastCostByCategory('Other');
     const grandTotalForecast = getTotalForecastGrandTotal();
 
@@ -2242,20 +2375,22 @@ const ConstructionCalculator = () => {
                   <th>${t.totalUnitsWithWaste}</th>
                   <th>${t.costPerUnit}</th>
                   <th>${t.totalCost}</th>
+                  <th>${t.assignedSubcontractor}</th>
                 </tr>
               </thead>
               <tbody>
                 ${materials.map(material => {
                   const cost = calculateMaterialCost(material);
+                  const subcontractorName = material.subcontractorId ? subcontractors.find(sc => sc.id === material.subcontractorId)?.name : 'N/A';
                   let detailRows = '';
                   if (material.type === 'concrete' && cost.concreteComponentCosts) {
-                    detailRows += `<tr><td colspan="7"><strong>${t.concreteComponents}</strong></td></tr>`;
-                    if (material.concreteCementBags) detailRows += `<tr><td class="sub-item">Cement: ${material.concreteCementBags} bags @ ${formatCurrency(parseFloat(material.concreteCementCostPerBag || 0), selectedCurrency.code)}</td><td colspan="5"></td><td>${formatCurrency(cost.concreteComponentCosts.cement, selectedCurrency.code)}</td></tr>`;
-                    if (material.concreteSandQty) detailRows += `<tr><td class="sub-item">Sand: ${material.concreteSandQty} ${material.concreteSandUnit} @ ${formatCurrency(parseFloat(material.concreteSandCostPerUnit || 0), selectedCurrency.code)}</td><td colspan="5"></td><td>${formatCurrency(cost.concreteComponentCosts.sand, selectedCurrency.code)}</td></tr>`;
-                    if (material.concreteGravelQty) detailRows += `<tr><td class="sub-item">Gravel: ${material.concreteGravelQty} ${material.concreteGravelUnit} @ ${formatCurrency(parseFloat(material.concreteGravelCostPerUnit || 0), selectedCurrency.code)}</td><td colspan="5"></td><td>${formatCurrency(cost.concreteComponentCosts.gravel, selectedCurrency.code)}</td></tr>`;
-                    if (material.concreteWaterQty) detailRows += `<tr><td class="sub-item">Water: ${material.concreteWaterQty} ${material.concreteWaterUnit} @ ${formatCurrency(parseFloat(material.concreteWaterCostPerUnit || 0), selectedCurrency.code)}</td><td colspan="5"></td><td>${formatCurrency(cost.concreteComponentCosts.water, selectedCurrency.code)}</td></tr>`;
-                    if (material.concreteMixerRentalCost) detailRows += `<tr><td class="sub-item">${t.concreteMixerRental}:</td><td colspan="5"></td><td>${formatCurrency(cost.concreteComponentCosts.mixer, selectedCurrency.code)}</td></tr>`;
-                    if (material.concreteAncillaryCostName && material.concreteAncillaryCostValue) detailRows += `<tr><td class="sub-item">${material.concreteAncillaryCostName}:</td><td colspan="5"></td><td>${formatCurrency(cost.concreteComponentCosts.ancillary, selectedCurrency.code)}</td></tr>`;
+                    detailRows += `<tr><td colspan="8"><strong>${t.concreteComponents}</strong></td></tr>`;
+                    if (material.concreteCementBags) detailRows += `<tr><td class="sub-item">Cement: ${material.concreteCementBags} bags @ ${formatCurrency(parseFloat(material.concreteCementCostPerBag || 0), selectedCurrency.code)}</td><td colspan="6"></td><td>${formatCurrency(cost.concreteComponentCosts.cement, selectedCurrency.code)}</td></tr>`;
+                    if (material.concreteSandQty) detailRows += `<tr><td class="sub-item">Sand: ${material.concreteSandQty} ${material.concreteSandUnit} @ ${formatCurrency(parseFloat(material.concreteSandCostPerUnit || 0), selectedCurrency.code)}</td><td colspan="6"></td><td>${formatCurrency(cost.concreteComponentCosts.sand, selectedCurrency.code)}</td></tr>`;
+                    if (material.concreteGravelQty) detailRows += `<tr><td class="sub-item">Gravel: ${material.concreteGravelQty} ${material.concreteGravelUnit} @ ${formatCurrency(parseFloat(material.concreteGravelCostPerUnit || 0), selectedCurrency.code)}</td><td colspan="6"></td><td>${formatCurrency(cost.concreteComponentCosts.gravel, selectedCurrency.code)}</td></tr>`;
+                    if (material.concreteWaterQty) detailRows += `<tr><td class="sub-item">Water: ${material.concreteWaterQty} ${material.concreteWaterUnit} @ ${formatCurrency(parseFloat(material.concreteWaterCostPerUnit || 0), selectedCurrency.code)}</td><td colspan="6"></td><td>${formatCurrency(cost.concreteComponentCosts.water, selectedCurrency.code)}</td></tr>`;
+                    if (material.concreteMixerRentalCost) detailRows += `<tr><td class="sub-item">${t.concreteMixerRental}:</td><td colspan="6"></td><td>${formatCurrency(cost.concreteComponentCosts.mixer, selectedCurrency.code)}</td></tr>`;
+                    if (material.concreteAncillaryCostName && material.concreteAncillaryCostValue) detailRows += `<tr><td class="sub-item">${material.concreteAncillaryCostName}:</td><td colspan="6"></td><td>${formatCurrency(cost.concreteComponentCosts.ancillary, selectedCurrency.code)}</td></tr>`;
                   }
                   return `
                     <tr>
@@ -2269,6 +2404,7 @@ const ConstructionCalculator = () => {
                       <td>${cost.totalUnits.toFixed(2)} ${cost.unitType}</td>
                       <td>${formatCurrency(parseFloat(material.costPerUnit || 0), selectedCurrency.code) || 'N/A'}</td>
                       <td>${formatCurrency(cost.totalCost, selectedCurrency.code)}</td>
+                      <td>${subcontractorName}</td>
                     </tr>
                     ${detailRows}
                   `;
@@ -2287,6 +2423,7 @@ const ConstructionCalculator = () => {
                   <th>${t.totalHours}</th>
                   <th>${t.numberOfLaborers}</th>
                   <th>${t.totalCost}</th>
+                  <th>${t.assignedSubcontractor}</th>
                 </tr>
               </thead>
               <tbody>
@@ -2297,10 +2434,12 @@ const ConstructionCalculator = () => {
                     <td>${trade.hours}</td>
                     <td>${trade.numberOfLaborers}</td>
                     <td>${formatCurrency((parseFloat(trade.rate || 0) * parseFloat(trade.hours || 0) * parseFloat(trade.numberOfLaborers || 1)), selectedCurrency.code)}</td>
+                    <td>${trade.subcontractorId ? subcontractors.find(sc => sc.id === trade.subcontractorId)?.name : 'N/A'}</td>
                   </tr>
                 `).join('')}
                 ${materials.filter(m => calculateMaterialCost(m).materialSpecificLaborCost > 0).map(material => {
                   const cost = calculateMaterialCost(material);
+                  const subcontractorName = material.subcontractorId ? subcontractors.find(sc => sc.id === material.subcontractorId)?.name : 'N/A';
                   return `
                     <tr>
                       <td>${material.materialLaborTrade} (Material: ${material.name})</td>
@@ -2308,11 +2447,13 @@ const ConstructionCalculator = () => {
                       <td>${material.materialLaborHours}</td>
                       <td>${material.materialLaborNumberOfLaborers}</td>
                       <td>${formatCurrency(cost.materialSpecificLaborCost, selectedCurrency.code)}</td>
+                      <td>${subcontractorName}</td>
                     </tr>
                   `;
                 }).join('')}
                 ${equipment.filter(e => calculateEquipmentCost(e).equipmentSpecificLaborCost > 0).map(item => {
                   const cost = calculateEquipmentCost(item);
+                  const subcontractorName = item.subcontractorId ? subcontractors.find(sc => sc.id === item.subcontractorId)?.name : 'N/A';
                   return `
                     <tr>
                       <td>${item.equipmentLaborTrade} (Equipment: ${item.name})</td>
@@ -2320,6 +2461,7 @@ const ConstructionCalculator = () => {
                       <td>${item.equipmentLaborHours}</td>
                       <td>${item.equipmentLaborNumberOfLaborers}</td>
                       <td>${formatCurrency(cost.equipmentSpecificLaborCost, selectedCurrency.code)}</td>
+                      <td>${subcontractorName}</td>
                     </tr>
                   `;
                 }).join('')}
@@ -2335,11 +2477,13 @@ const ConstructionCalculator = () => {
                   <th>${t.equipmentName}</th>
                   <th>${t.equipmentType}</th>
                   <th>${t.totalCost}</th>
+                  <th>${t.assignedSubcontractor}</th>
                 </tr>
               </thead>
               <tbody>
                 ${equipment.map(item => {
                   const cost = calculateEquipmentCost(item);
+                  const subcontractorName = item.subcontractorId ? subcontractors.find(sc => sc.id === item.subcontractorId)?.name : 'N/A';
                   let rentalDetails = '';
                   if (item.type === 'rental') {
                     if (item.rentalUnit === 'day') rentalDetails = `${item.numberOfDays} ${t.day}${parseFloat(item.numberOfDays) !== 1 ? 's' : ''}`;
@@ -2355,6 +2499,7 @@ const ConstructionCalculator = () => {
                       </td>
                       <td>${item.type === 'purchase' ? t.purchase : `${t.rental} (${rentalDetails})`}</td>
                       <td>${formatCurrency(cost.totalCost, selectedCurrency.code)}</td>
+                      <td>${subcontractorName}</td>
                     </tr>
                   `;
                 }).join('')}
@@ -2435,6 +2580,7 @@ const ConstructionCalculator = () => {
     printWindow.document.write(printContent);
     printWindow.document.close();
     printWindow.print();
+    console.log("[LOG] Exported cost summary as PDF.");
   };
 
   const exportAsExcel = () => {
@@ -2457,11 +2603,12 @@ const ConstructionCalculator = () => {
     csvContent += `${t.currency},${selectedCurrency.name} (${selectedCurrency.symbol})\n\n`;
 
     csvContent += `"${t.materialsList}"\n`;
-    csvContent += `"${t.materialName}","${t.materialDescription}","${language === 'en' ? 'Type' : 'Tipo'}","${t.baseUnits}","${t.wasteAmount}","${t.totalUnitsWithWaste}","${language === 'en' ? 'Unit Type' : 'Tipo de Unidad'}","${t.costPerUnit}","${t.totalCost}","${t.submittalLink}","${t.invoiceLink}"\n`;
+    csvContent += `"${t.materialName}","${t.materialDescription}","${language === 'en' ? 'Type' : 'Tipo'}","${t.baseUnits}","${t.wasteAmount}","${t.totalUnitsWithWaste}","${language === 'en' ? 'Unit Type' : 'Tipo de Unidad'}","${t.costPerUnit}","${t.totalCost}","${t.submittalLink}","${t.invoiceLink}","${t.assignedSubcontractor}"\n`;
 
     materials.forEach(material => {
       const cost = calculateMaterialCost(material);
-      csvContent += `"${material.name}","${material.description || ''}","${t[material.type]}","${cost.baseUnits.toFixed(2)}","${cost.wasteAmount.toFixed(2)}","${cost.totalUnits.toFixed(2)}","${cost.unitType}","${formatCurrency(parseFloat(material.costPerUnit || 0), selectedCurrency.code) || 'N/A'}","${formatCurrency(cost.totalCost, selectedCurrency.code)}","${material.submittalLink || ''}","${material.invoiceLink || ''}"\n`;
+      const subcontractorName = material.subcontractorId ? subcontractors.find(sc => sc.id === material.subcontractorId)?.name : 'N/A';
+      csvContent += `"${material.name}","${material.description || ''}","${t[material.type]}","${cost.baseUnits.toFixed(2)}","${cost.wasteAmount.toFixed(2)}","${cost.totalUnits.toFixed(2)}","${cost.unitType}","${formatCurrency(parseFloat(material.costPerUnit || 0), selectedCurrency.code) || 'N/A'}","${formatCurrency(cost.totalCost, selectedCurrency.code)}","${material.submittalLink || ''}","${material.invoiceLink || ''}","${subcontractorName}"\n`;
       if (material.type === 'concrete' && cost.concreteComponentCosts) {
         csvContent += `"${t.concreteComponents}"\n`;
         if (material.concreteCementBags) csvContent += `,"Cement: ${material.concreteCementBags} bags @ ${formatCurrency(parseFloat(material.concreteCementCostPerBag || 0), selectedCurrency.code)}",,,,,,,,,"${formatCurrency(cost.concreteComponentCosts.cement, selectedCurrency.code)}"\n`;
@@ -2474,23 +2621,27 @@ const ConstructionCalculator = () => {
     });
 
     csvContent += `\n"${t.laborCostBreakdown}"\n`;
-    csvContent += `"${t.tradeName}","${t.hourlyRate}","${t.totalHours}","${t.numberOfLaborers}","${t.totalCost}"\n`;
+    csvContent += `"${t.tradeName}","${t.hourlyRate}","${t.totalHours}","${t.numberOfLaborers}","${t.totalCost}","${t.assignedSubcontractor}"\n`;
     laborTrades.forEach(trade => {
-      csvContent += `"${trade.tradeName} (Project-level)","${formatCurrency(parseFloat(trade.rate || 0), selectedCurrency.code)}","${trade.hours}","${trade.numberOfLaborers}","${formatCurrency((parseFloat(trade.rate || 0) * parseFloat(trade.hours || 0) * parseFloat(trade.numberOfLaborers || 1)), selectedCurrency.code)}"\n`;
+      const subcontractorName = trade.subcontractorId ? subcontractors.find(sc => sc.id === trade.subcontractorId)?.name : 'N/A';
+      csvContent += `"${trade.tradeName} (Project-level)","${formatCurrency(parseFloat(trade.rate || 0), selectedCurrency.code)}","${trade.hours}","${trade.numberOfLaborers}","${formatCurrency((parseFloat(trade.rate || 0) * parseFloat(trade.hours || 0) * parseFloat(trade.numberOfLaborers || 1)), selectedCurrency.code)}","${subcontractorName}"\n`;
     });
     materials.filter(m => calculateMaterialCost(m).materialSpecificLaborCost > 0).forEach(material => {
       const cost = calculateMaterialCost(material);
-      csvContent += `"${material.materialLaborTrade} (Material: ${material.name})","${formatCurrency(parseFloat(material.materialLaborRate || 0), selectedCurrency.code)}","${material.materialLaborHours}","${material.materialLaborNumberOfLaborers}","${formatCurrency(cost.materialSpecificLaborCost, selectedCurrency.code)}"\n`;
+      const subcontractorName = material.subcontractorId ? subcontractors.find(sc => sc.id === material.subcontractorId)?.name : 'N/A';
+      csvContent += `"${material.materialLaborTrade} (Material: ${material.name})","${formatCurrency(parseFloat(material.materialLaborRate || 0), selectedCurrency.code)}","${material.materialLaborHours}","${material.materialLaborNumberOfLaborers}","${formatCurrency(cost.materialSpecificLaborCost, selectedCurrency.code)}","${subcontractorName}"\n`;
     });
     equipment.filter(e => calculateEquipmentCost(e).equipmentSpecificLaborCost > 0).forEach(item => {
       const cost = calculateEquipmentCost(item);
-      csvContent += `"${item.equipmentLaborTrade} (Equipment: ${item.name})","${formatCurrency(parseFloat(item.equipmentLaborRate || 0), selectedCurrency.code)}","${item.equipmentLaborHours}","${item.equipmentLaborNumberOfLaborers}","${formatCurrency(cost.equipmentSpecificLaborCost, selectedCurrency.code)}"\n`;
+      const subcontractorName = item.subcontractorId ? subcontractors.find(sc => sc.id === item.subcontractorId)?.name : 'N/A';
+      csvContent += `"${item.equipmentLaborTrade} (Equipment: ${item.name})","${formatCurrency(parseFloat(item.equipmentLaborRate || 0), selectedCurrency.code)}","${item.equipmentLaborHours}","${item.equipmentLaborNumberOfLaborers}","${formatCurrency(cost.equipmentSpecificLaborCost, selectedCurrency.code)}","${subcontractorName}"\n`;
     });
 
     csvContent += `\n"${t.totalEquipmentCost}"\n`;
-    csvContent += `"${t.equipmentName}","${t.equipmentType}","${t.totalCost}","${t.submittalLink}","${t.invoiceLink}"\n`;
+    csvContent += `"${t.equipmentName}","${t.equipmentType}","${t.totalCost}","${t.submittalLink}","${t.invoiceLink}","${t.assignedSubcontractor}"\n`;
     equipment.forEach(item => {
       const cost = calculateEquipmentCost(item);
+      const subcontractorName = item.subcontractorId ? subcontractors.find(sc => sc.id === item.subcontractorId)?.name : 'N/A';
       let rentalDetails = '';
       if (item.type === 'rental') {
         if (item.rentalUnit === 'day') rentalDetails = `${item.numberOfDays} ${t.day}${parseFloat(item.numberOfDays) !== 1 ? 's' : ''}`;
@@ -2498,7 +2649,7 @@ const ConstructionCalculator = () => {
         if (item.rentalUnit === 'month') rentalDetails = `${item.numberOfDays ? `${(parseFloat(item.numberOfDays) / 30).toFixed(1)} ${t.month}${parseFloat(item.numberOfDays) / 30 !== 1 ? 's' : ''}` : ''}`;
         if (item.rentalUnit === 'hour') rentalDetails = `${item.numberOfHours} ${t.hour}${parseFloat(item.numberOfHours) !== 1 ? 's' : ''}`;
       }
-      csvContent += `"${item.name}","${item.type === 'purchase' ? t.purchase : `${t.rental} (${rentalDetails})`}","${formatCurrency(cost.totalCost, selectedCurrency.code)}","${item.submittalLink || ''}","${item.invoiceLink || ''}"\n`;
+      csvContent += `"${item.name}","${item.type === 'purchase' ? t.purchase : `${t.rental} (${rentalDetails})`}","${formatCurrency(cost.totalCost, selectedCurrency.code)}","${item.submittalLink || ''}","${item.invoiceLink || ''}","${subcontractorName}"\n`;
     });
 
 
@@ -2527,6 +2678,7 @@ const ConstructionCalculator = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    console.log("[LOG] Exported cost summary as Excel (CSV).");
   };
 
   // Scheduling functions
@@ -2536,23 +2688,122 @@ const ConstructionCalculator = () => {
       return;
     }
     setScheduleTasks([...scheduleTasks, { ...newTask, id: Date.now() }]);
-    setNewTask({ taskName: '', startDate: '', endDate: '', assignedMaterialIds: [], assignedEquipmentIds: [] });
+    console.log("[LOG] Schedule task added:", newTask);
+    setNewTask({ taskName: '', startDate: '', endDate: '', assignedMaterialIds: [], assignedEquipmentIds: [], subcontractorId: '' }); // Reset subcontractor assignment
   };
 
   const removeScheduleTask = (id) => {
     setScheduleTasks(scheduleTasks.filter(task => task.id !== id));
+    console.log("[LOG] Schedule task removed:", id);
   };
 
-  const exportSchedule = () => {
-    const dataStr = JSON.stringify(scheduleTasks, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-    const link = document.createElement('a');
-    link.setAttribute('href', dataUri);
-    link.setAttribute('download', `construction_schedule_${new Date().toISOString().split('T')[0]}.json`);
+  // New: Export Schedule as PDF
+  const exportScheduleAsPDF = () => {
+    const printWindow = window.open('', '_blank');
+    const printContent = `
+      <html>
+        <head>
+          <title>${t.scheduleTitle}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 40px; font-size: 12px; }
+            .header { border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+            .section { margin-bottom: 20px; }
+            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+            ul { margin-left: 15px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>${t.scheduleTitle}</h1>
+            <p><strong>${language === 'en' ? 'Date' : 'Fecha'}:</strong> ${new Date().toLocaleDateString(getLocale(language))}</p>
+          </div>
+
+          <div class="section">
+            <table>
+              <thead>
+                <tr>
+                  <th>${t.taskName}</th>
+                  <th>${t.startDate}</th>
+                  <th>${t.endDate}</th>
+                  <th>${t.assignedMaterials}</th>
+                  <th>${t.assignedEquipment}</th>
+                  <th>${t.assignedSubcontractor}</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${scheduleTasks.map(task => {
+                  const assignedMaterialsNames = task.assignedMaterialIds.map(materialId => {
+                    const material = materials.find(m => m.id === materialId);
+                    return material ? material.name : '';
+                  }).filter(name => name).join(', ');
+
+                  const assignedEquipmentNames = task.assignedEquipmentIds.map(equipmentId => {
+                    const item = equipment.find(e => e.id === equipmentId);
+                    return item ? item.name : '';
+                  }).filter(name => name).join(', ');
+
+                  const subcontractorName = task.subcontractorId ? subcontractors.find(sc => sc.id === task.subcontractorId)?.name : 'N/A';
+
+                  return `
+                    <tr>
+                      <td>${task.taskName}</td>
+                      <td>${task.startDate}</td>
+                      <td>${task.endDate}</td>
+                      <td>${assignedMaterialsNames || 'N/A'}</td>
+                      <td>${assignedEquipmentNames || 'N/A'}</td>
+                      <td>${subcontractorName}</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.print();
+    console.log("[LOG] Exported schedule as PDF.");
+  };
+
+  // New: Export Schedule as Excel (CSV)
+  const exportScheduleAsExcel = () => {
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += `"${t.scheduleTitle}"\n`;
+    csvContent += `${language === 'en' ? 'Date' : 'Fecha'},${new Date().toLocaleDateString(getLocale(language))}\n\n`;
+
+    csvContent += `"${t.taskName}","${t.startDate}","${t.endDate}","${t.assignedMaterials}","${t.assignedEquipment}","${t.assignedSubcontractor}"\n`;
+
+    scheduleTasks.forEach(task => {
+      const assignedMaterialsNames = task.assignedMaterialIds.map(materialId => {
+        const material = materials.find(m => m.id === materialId);
+        return material ? material.name : '';
+      }).filter(name => name).join('; ');
+
+      const assignedEquipmentNames = task.assignedEquipmentIds.map(equipmentId => {
+        const item = equipment.find(e => e.id === equipmentId);
+        return item ? item.name : '';
+      }).filter(name => name).join('; ');
+
+      const subcontractorName = task.subcontractorId ? subcontractors.find(sc => sc.id === task.subcontractorId)?.name : 'N/A';
+
+      csvContent += `"${task.taskName}","${task.startDate}","${task.endDate}","${assignedMaterialsNames}","${assignedEquipmentNames}","${subcontractorName}"\n`;
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `construction_schedule_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    console.log("[LOG] Exported schedule as Excel (CSV).");
   };
+
 
   // Cost Forecast functions
   const addForecastCost = () => {
@@ -2561,6 +2812,7 @@ const ConstructionCalculator = () => {
       return;
     }
     setForecastCosts([...forecastCosts, { ...newForecastCost, id: Date.now() }]);
+    console.log("[LOG] Forecast cost added:", newForecastCost);
     setNewForecastCost({ costName: '', costCategory: 'Material', amount: '', assignedTaskIds: [] });
   };
 
@@ -2570,6 +2822,7 @@ const ConstructionCalculator = () => {
       return;
     }
     setForecastCosts(forecastCosts.filter(cost => cost.id !== id));
+    console.log("[LOG] Forecast cost removed:", id);
   };
 
   const getTotalForecastCostByCategory = (category) => {
@@ -2620,7 +2873,57 @@ const ConstructionCalculator = () => {
       // Combine and return new state
       return [...manualForecasts, newAutomatedMaterial, newAutomatedLabor, newAutomatedEquipment];
     });
+    console.log("[LOG] Automated costs updated in forecast.");
   }, [materials, laborTrades, equipment, language, units, selectedCurrency, t]); // Dependencies: materials, laborTrades, equipment, and translation/currency settings
+
+  // Subcontractor functions
+  const addSubcontractor = () => {
+    if (!newSubcontractor.name || !newSubcontractor.company || !newSubcontractor.contactInfo) {
+      alert(t.fillRequired);
+      return;
+    }
+    setSubcontractors([...subcontractors, { ...newSubcontractor, id: Date.now() }]);
+    console.log("[LOG] Subcontractor added:", newSubcontractor);
+    setNewSubcontractor({ name: '', company: '', contactInfo: '' });
+  };
+
+  const removeSubcontractor = (id) => {
+    setSubcontractors(subcontractors.filter(sc => sc.id !== id));
+    console.log("[LOG] Subcontractor removed:", id);
+  };
+
+  const calculateSubcontractorTotalCosts = (subcontractorId) => {
+    let totalMaterialCost = 0;
+    let totalLaborCost = 0;
+    let totalEquipmentCost = 0;
+
+    materials.forEach(material => {
+      if (material.subcontractorId === subcontractorId) {
+        totalMaterialCost += calculateMaterialCost(material).totalCost;
+        totalLaborCost += calculateMaterialCost(material).materialSpecificLaborCost; // Material-specific labor
+      }
+    });
+
+    laborTrades.forEach(trade => {
+      if (trade.subcontractorId === subcontractorId) {
+        totalLaborCost += (parseFloat(trade.rate || 0) * parseFloat(trade.hours || 0) * parseFloat(trade.numberOfLaborers || 1));
+      }
+    });
+
+    equipment.forEach(item => {
+      if (item.subcontractorId === subcontractorId) {
+        totalEquipmentCost += calculateEquipmentCost(item).totalCost;
+        totalLaborCost += calculateEquipmentCost(item).equipmentSpecificLaborCost; // Equipment-specific labor
+      }
+    });
+
+    return {
+      material: totalMaterialCost,
+      labor: totalLaborCost,
+      equipment: totalEquipmentCost,
+      grandTotal: totalMaterialCost + totalLaborCost + totalEquipmentCost,
+    };
+  };
 
 
   return (
@@ -2760,6 +3063,16 @@ const ConstructionCalculator = () => {
           }`}
         >
           {t.costForecastTab}
+        </button>
+        <button
+          onClick={() => setActiveTab('subcontractors')}
+          className={`px-6 py-3 text-lg font-medium transition-colors border-b-2 ${
+            activeTab === 'subcontractors'
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          }`}
+        >
+          {t.subcontractorsTab}
         </button>
       </div>
 
@@ -3211,6 +3524,21 @@ const ConstructionCalculator = () => {
                   </div>
                 </div>
 
+                {/* Subcontractor Assignment for Material */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t.assignedSubcontractor}</label>
+                  <select
+                    value={newMaterial.subcontractorId}
+                    onChange={(e) => setNewMaterial({...newMaterial, subcontractorId: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">{t.selectSubcontractorPlaceholder}</option>
+                    {subcontractors.map(sc => (
+                      <option key={sc.id} value={sc.id}>{sc.name} ({sc.company})</option>
+                    ))}
+                  </select>
+                </div>
+
                 <button
                   onClick={addMaterial}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-md transition duration-200 shadow-md hover:shadow-lg"
@@ -3421,6 +3749,21 @@ const ConstructionCalculator = () => {
                   </div>
                 </div>
 
+                {/* Subcontractor Assignment for Equipment */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t.assignedSubcontractor}</label>
+                  <select
+                    value={newEquipment.subcontractorId}
+                    onChange={(e) => setNewEquipment({...newEquipment, subcontractorId: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  >
+                    <option value="">{t.selectSubcontractorPlaceholder}</option>
+                    {subcontractors.map(sc => (
+                      <option key={sc.id} value={sc.id}>{sc.name} ({sc.company})</option>
+                    ))}
+                  </select>
+                </div>
+
                 <button
                   onClick={addEquipment}
                   className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-6 rounded-md transition duration-200 shadow-md hover:shadow-lg"
@@ -3483,6 +3826,22 @@ const ConstructionCalculator = () => {
                     />
                   </div>
                 </div>
+
+                {/* Subcontractor Assignment for Project Labor */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t.assignedSubcontractor}</label>
+                  <select
+                    value={newLaborTrade.subcontractorId}
+                    onChange={(e) => setNewLaborTrade({...newLaborTrade, subcontractorId: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">{t.selectSubcontractorPlaceholder}</option>
+                    {subcontractors.map(sc => (
+                      <option key={sc.id} value={sc.id}>{sc.name} ({sc.company})</option>
+                    ))}
+                  </select>
+                </div>
+
                 <button
                   onClick={addLaborTrade}
                   className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-md transition duration-200 shadow-md hover:shadow-lg"
@@ -3503,6 +3862,7 @@ const ConstructionCalculator = () => {
                       <div className="text-sm text-gray-700">
                         <p>
                           <strong>{trade.tradeName}</strong> (Project-level): {formatCurrency(parseFloat(trade.rate || 0), selectedCurrency.code)}/{language === 'en' ? 'hr' : 'hr'} x {trade.hours} {language === 'en' ? 'hrs' : 'hrs'} x {trade.numberOfLaborers} {t.numberOfLaborers}
+                          {trade.subcontractorId && <span className="ml-2 text-xs text-gray-500">({subcontractors.find(sc => sc.id === trade.subcontractorId)?.name})</span>}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -3523,6 +3883,7 @@ const ConstructionCalculator = () => {
                         <div className="text-sm text-gray-700">
                           <p>
                             <strong>{material.materialLaborTrade}</strong> (Material: {material.name}): {formatCurrency(parseFloat(material.materialLaborRate || 0), selectedCurrency.code)}/{language === 'en' ? 'hr' : 'hr'} x {parseFloat(material.materialLaborHours || 0).toFixed(2)} {language === 'en' ? 'hrs' : 'hrs'} x {parseFloat(material.materialLaborNumberOfLaborers || 1).toFixed(0)} {t.numberOfLaborers}
+                            {material.subcontractorId && <span className="ml-2 text-xs text-gray-500">({subcontractors.find(sc => sc.id === material.subcontractorId)?.name})</span>}
                           </p>
                         </div>
                         <span className="font-semibold text-gray-900">{formatCurrency(cost.materialSpecificLaborCost, selectedCurrency.code)}</span>
@@ -3536,6 +3897,7 @@ const ConstructionCalculator = () => {
                         <div className="text-sm text-gray-700">
                           <p>
                             <strong>{item.equipmentLaborTrade}</strong> (Equipment: {item.name}): {formatCurrency(parseFloat(item.equipmentLaborRate || 0), selectedCurrency.code)}/{language === 'en' ? 'hr' : 'hr'} x {parseFloat(item.equipmentLaborHours || 0).toFixed(2)} {language === 'en' ? 'hrs' : 'hrs'} x {parseFloat(item.equipmentLaborNumberOfLaborers || 1).toFixed(0)} {t.numberOfLaborers}
+                            {item.subcontractorId && <span className="ml-2 text-xs text-gray-500">({subcontractors.find(sc => sc.id === item.subcontractorId)?.name})</span>}
                           </p>
                         </div>
                         <span className="font-semibold text-gray-900">{formatCurrency(cost.equipmentSpecificLaborCost, selectedCurrency.code)}</span>
@@ -3561,6 +3923,7 @@ const ConstructionCalculator = () => {
                 <div className="space-y-3">
                   {materials.map((material) => {
                     const cost = calculateMaterialCost(material);
+                    const assignedSubcontractor = material.subcontractorId ? subcontractors.find(sc => sc.id === material.subcontractorId) : null;
                     return (
                       <div key={material.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
                         <div className="flex justify-between items-start mb-2">
@@ -3606,6 +3969,11 @@ const ConstructionCalculator = () => {
                             </p>
                           )}
                           <p><strong>{t.totalCost}</strong> {formatCurrency(cost.totalCost, selectedCurrency.code)}</p>
+                          {assignedSubcontractor && (
+                            <p className="text-blue-700">
+                              <strong>{t.assignedSubcontractor}:</strong> {assignedSubcontractor.name} ({assignedSubcontractor.company})
+                            </p>
+                          )}
                           {material.submittalLink && (
                             <p className="flex items-center gap-1">
                               <Link className="w-4 h-4 text-blue-500" />
@@ -3643,6 +4011,7 @@ const ConstructionCalculator = () => {
                 <div className="space-y-3">
                   {equipment.map((item) => {
                     const cost = calculateEquipmentCost(item);
+                    const assignedSubcontractor = item.subcontractorId ? subcontractors.find(sc => sc.id === item.subcontractorId) : null;
                     let rentalDetails = '';
                     if (item.type === 'rental') {
                       if (item.rentalUnit === 'day') rentalDetails = `${item.numberOfDays} ${t.day}${parseFloat(item.numberOfDays) !== 1 ? 's' : ''}`;
@@ -3681,6 +4050,11 @@ const ConstructionCalculator = () => {
                             </p>
                           )}
                           <p><strong>{t.totalCost}</strong> {formatCurrency(cost.totalCost, selectedCurrency.code)}</p>
+                          {assignedSubcontractor && (
+                            <p className="text-blue-700">
+                              <strong>{t.assignedSubcontractor}:</strong> {assignedSubcontractor.name} ({assignedSubcontractor.company})
+                            </p>
+                          )}
                           {item.submittalLink && (
                             <p className="flex items-center gap-1">
                               <Link className="w-4 h-4 text-blue-500" />
@@ -3900,6 +4274,21 @@ const ConstructionCalculator = () => {
                   />
                   <p className="text-xs text-gray-500 mt-1">{t.assignEquipmentPlaceholder}</p>
                 </div>
+                {/* Subcontractor Assignment for Task */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t.assignedSubcontractor}</label>
+                  <select
+                    value={newTask.subcontractorId}
+                    onChange={(e) => setNewTask({...newTask, subcontractorId: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">{t.selectSubcontractorPlaceholder}</option>
+                    {subcontractors.map(sc => (
+                      <option key={sc.id} value={sc.id}>{sc.name} ({sc.company})</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">{t.assignSubcontractorPlaceholder}</p>
+                </div>
                 <button
                   onClick={addScheduleTask}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-md transition duration-200 shadow-md hover:shadow-lg"
@@ -3913,14 +4302,22 @@ const ConstructionCalculator = () => {
             <div className="bg-gray-50 p-6 rounded-lg shadow-md">
               <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2">
                 <Download className="w-5 h-5" />
-                {t.exportSchedule.replace(' (JSON)', '')}
+                {t.exportSchedule}
               </h3>
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
-                  onClick={exportSchedule}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-md transition duration-200 shadow-md hover:shadow-lg"
+                  onClick={exportScheduleAsPDF}
+                  className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-md transition duration-200 shadow-md hover:shadow-lg"
                 >
-                  {t.exportSchedule}
+                  <Download className="w-4 h-4" />
+                  {t.exportPDF}
+                </button>
+                <button
+                  onClick={exportScheduleAsExcel}
+                  className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-md transition duration-200 shadow-md hover:shadow-lg"
+                >
+                  <Download className="w-4 h-4" />
+                  {t.exportExcel}
                 </button>
               </div>
             </div>
@@ -3937,47 +4334,55 @@ const ConstructionCalculator = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {scheduleTasks.map(task => (
-                    <div key={task.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-medium text-gray-900 text-lg">{task.taskName}</h4>
-                        <button
-                          onClick={() => removeScheduleTask(task.id)}
-                          className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100 transition-colors"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
+                  {scheduleTasks.map(task => {
+                    const assignedSubcontractor = task.subcontractorId ? subcontractors.find(sc => sc.id === task.subcontractorId) : null;
+                    return (
+                      <div key={task.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-medium text-gray-900 text-lg">{task.taskName}</h4>
+                          <button
+                            onClick={() => removeScheduleTask(task.id)}
+                            className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          <strong>{t.startDate}:</strong> {task.startDate}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          <strong>{t.endDate}:</strong> {task.endDate}
+                        </p>
+                        {task.assignedMaterialIds && task.assignedMaterialIds.length > 0 && (
+                          <div className="mt-2 text-sm text-gray-700">
+                            <strong>{t.assignedMaterials}:</strong>
+                            <ul className="list-disc list-inside ml-2">
+                              {task.assignedMaterialIds.map(materialId => {
+                                const material = materials.find(m => m.id === materialId);
+                                return material ? <li key={material.id}>{material.name}</li> : null;
+                              })}
+                            </ul>
+                          </div>
+                        )}
+                        {task.assignedEquipmentIds && task.assignedEquipmentIds.length > 0 && (
+                          <div className="mt-2 text-sm text-gray-700">
+                            <strong>{t.assignedEquipment}:</strong>
+                            <ul className="list-disc list-inside ml-2">
+                              {task.assignedEquipmentIds.map(equipmentId => {
+                                const item = equipment.find(e => e.id === equipmentId);
+                                return item ? <li key={item.id}>{item.name}</li> : null;
+                              })}
+                            </ul>
+                          </div>
+                        )}
+                        {assignedSubcontractor && (
+                          <p className="mt-2 text-sm text-blue-700">
+                            <strong>{t.assignedSubcontractor}:</strong> {assignedSubcontractor.name} ({assignedSubcontractor.company})
+                          </p>
+                        )}
                       </div>
-                      <p className="text-sm text-gray-600">
-                        <strong>{t.startDate}:</strong> {task.startDate}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        <strong>{t.endDate}:</strong> {task.endDate}
-                      </p>
-                      {task.assignedMaterialIds && task.assignedMaterialIds.length > 0 && (
-                        <div className="mt-2 text-sm text-gray-700">
-                          <strong>{t.assignedMaterials}:</strong>
-                          <ul className="list-disc list-inside ml-2">
-                            {task.assignedMaterialIds.map(materialId => {
-                              const material = materials.find(m => m.id === materialId);
-                              return material ? <li key={material.id}>{material.name}</li> : null;
-                            })}
-                          </ul>
-                        </div>
-                      )}
-                      {task.assignedEquipmentIds && task.assignedEquipmentIds.length > 0 && (
-                        <div className="mt-2 text-sm text-gray-700">
-                          <strong>{t.assignedEquipment}:</strong>
-                          <ul className="list-disc list-inside ml-2">
-                            {task.assignedEquipmentIds.map(equipmentId => {
-                              const item = equipment.find(e => e.id === equipmentId);
-                              return item ? <li key={item.id}>{item.name}</li> : null;
-                            })}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -4124,6 +4529,111 @@ const ConstructionCalculator = () => {
                   <span className="text-2xl font-bold text-green-700">{formatCurrency(getTotalForecastGrandTotal(), selectedCurrency.code)}</span>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'subcontractors' && (
+        <div className="grid lg:grid-cols-2 gap-8">
+          {/* Add New Subcontractor Form */}
+          <div className="space-y-6">
+            <div className="bg-blue-50 border border-blue-200 p-6 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                <Plus className="w-5 h-5" />
+                {t.addSubcontractor}
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t.subcontractorName}</label>
+                  <input
+                    type="text"
+                    value={newSubcontractor.name}
+                    onChange={(e) => setNewSubcontractor({...newSubcontractor, name: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder={t.ph_subcontractorName}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t.companyName}</label>
+                  <input
+                    type="text"
+                    value={newSubcontractor.company}
+                    onChange={(e) => setNewSubcontractor({...newSubcontractor, company: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder={t.ph_companyName}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t.contactInfo}</label>
+                  <input
+                    type="text"
+                    value={newSubcontractor.contactInfo}
+                    onChange={(e) => setNewSubcontractor({...newSubcontractor, contactInfo: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder={t.ph_contactInfo}
+                  />
+                </div>
+                <button
+                  onClick={addSubcontractor}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-md transition duration-200 shadow-md hover:shadow-lg"
+                >
+                  {t.addContact}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Subcontractors List */}
+          <div className="space-y-6">
+            <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold mb-4 text-gray-800">{t.subcontractorsList}</h2>
+              {subcontractors.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Users className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                  <p>{t.noSubcontractors}</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {subcontractors.map(subcontractor => {
+                    const costs = calculateSubcontractorTotalCosts(subcontractor.id);
+                    return (
+                      <div key={subcontractor.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-medium text-gray-900 text-lg">{subcontractor.name} ({subcontractor.company})</h4>
+                          <button
+                            onClick={() => removeSubcontractor(subcontractor.id)}
+                            className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <p className="text-sm text-gray-600"><strong>{t.contactInfo}:</strong> {subcontractor.contactInfo}</p>
+
+                        <div className="mt-4 border-t border-gray-200 pt-3 space-y-1">
+                          <h5 className="font-semibold text-gray-800">{t.totalCostForSubcontractor}</h5>
+                          <div className="flex justify-between text-sm text-gray-700">
+                            <span>{t.subcontractorMaterialCost}:</span>
+                            <span>{formatCurrency(costs.material, selectedCurrency.code)}</span>
+                          </div>
+                          <div className="flex justify-between text-sm text-gray-700">
+                            <span>{t.subcontractorLaborCost}:</span>
+                            <span>{formatCurrency(costs.labor, selectedCurrency.code)}</span>
+                          </div>
+                          <div className="flex justify-between text-sm text-gray-700">
+                            <span>{t.subcontractorEquipmentCost}:</span>
+                            <span>{formatCurrency(costs.equipment, selectedCurrency.code)}</span>
+                          </div>
+                          <div className="flex justify-between font-bold text-gray-900 pt-2 border-t border-gray-300">
+                            <span>{t.subcontractorGrandTotal}:</span>
+                            <span>{formatCurrency(costs.grandTotal, selectedCurrency.code)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </div>

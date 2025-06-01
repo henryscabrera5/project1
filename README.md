@@ -19,4 +19,5 @@ A comprehensive React-based construction cost calculator with multi-language sup
 - Node.js (version 14 or higher)
 - npm or yarn
 
-### Installation
+### Info
+- Best to use with a computer
