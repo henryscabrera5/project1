@@ -950,7 +950,7 @@ const ConstructionCalculator = () => {
       addScheduleTask: 'Agregar Tarea al Programa',
       noScheduleTasks: 'No se han agregado tareas aún. Use el formulario de arriba para crear un programa.',
       exportSchedule: 'Exportar Programa', // Modified
-      scheduleExpectedFormat: 'Formato JSON esperado: [{ "taskName": "...", "startDate": "AAAA-MM-DD", "endDate": "AAAA-MM-DD", "assignedMaterialIds": [id_material_1, id_material_2] }]',
+      scheduleExpectedFormat: 'Formato JSON esperado: [{ "taskName": "...", "startDate": "AAAA-DD-MM", "endDate": "AAAA-DD-MM", "assignedMaterialIds": [id_material_1, id_material_2] }]',
       viewSubmittal: 'Ver Presentación',
       viewInvoice: 'Ver Factura',
       // Cost Forecast translations
